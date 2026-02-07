@@ -34,6 +34,7 @@
 #include "helper/battery.h"
 #include "misc.h"
 #include "settings.h"
+#include "../driver/st7565.h"
 #if defined(ENABLE_OVERLAY)
     #include "sram-overlay.h"
 #endif
@@ -41,9 +42,6 @@
 #include "ui/menu.h"
 #include "ui/ui.h"
 
-#ifndef ARRAY_SIZE
-    #define ARRAY_SIZE(x) (sizeof(x) / sizeof(x[0]))
-#endif
 
 uint8_t gUnlockAllTxConfCnt;
 
@@ -234,9 +232,6 @@ int MENU_GetLimits(uint8_t menu_id, int32_t *pMin, int32_t *pMax)
         #endif
         case MENU_BCL:
         case MENU_BEEP:
-        case MENU_S_ADD1:
-        case MENU_S_ADD2:
-        case MENU_S_ADD3:
         case MENU_STE:
         case MENU_D_ST:
 #ifdef ENABLE_DTMF_CALLING
@@ -257,6 +252,7 @@ int MENU_GetLimits(uint8_t menu_id, int32_t *pMin, int32_t *pMax)
 #endif
 #ifdef ENABLE_FEAT_F4HWN
         case MENU_SET_TMR:
+        case MENU_S_PRI:
 #endif
             //*pMin = 0;
             *pMax = ARRAY_SIZE(gSubMenu_OFF_ON) - 1;
@@ -299,11 +295,10 @@ int MENU_GetLimits(uint8_t menu_id, int32_t *pMin, int32_t *pMax)
             *pMax = MR_CHANNEL_LAST;
             break;
 
-        case MENU_SLIST1:
-        case MENU_SLIST2:
-        case MENU_SLIST3:
-            *pMin = -1;
-            *pMax = MR_CHANNEL_LAST;
+        case MENU_S_PRI_CH_1:
+        case MENU_S_PRI_CH_2:
+            //*pMin = 0;
+            *pMax = MR_CHANNEL_LAST + 2;
             break;
 
         case MENU_SAVE:
@@ -316,9 +311,14 @@ int MENU_GetLimits(uint8_t menu_id, int32_t *pMin, int32_t *pMax)
             *pMax = 4;
             break;
 
-        case MENU_S_LIST:
+        case MENU_LIST_CH:
             //*pMin = 0;
-            *pMax = 5;
+            *pMax = MR_CHANNELS_LIST + 1;
+            break;
+
+        case MENU_S_LIST:
+            *pMin = 1;
+            *pMax = MR_CHANNELS_LIST + 1;
             break;
 
 #ifdef ENABLE_DTMF_CALLING
@@ -371,6 +371,11 @@ int MENU_GetLimits(uint8_t menu_id, int32_t *pMin, int32_t *pMax)
             *pMax = 4;
             break;
 
+        case MENU_SET_NAV:
+            //*pMin = 0;
+            *pMax = 1;
+            break;
+
         case MENU_F1SHRT:
         case MENU_F1LONG:
         case MENU_F2SHRT:
@@ -399,19 +404,19 @@ int MENU_GetLimits(uint8_t menu_id, int32_t *pMin, int32_t *pMax)
             //*pMin = 0;
             *pMax = ARRAY_SIZE(gSubMenu_SET_TOT) - 1;
             break;
-#ifdef ENABLE_FEAT_F4HWN_CTR
+        #ifdef ENABLE_FEAT_F4HWN_CTR
         case MENU_SET_CTR:
             *pMin = 1;
             *pMax = 15;
             break;
-#endif
+        #endif
         case MENU_TX_LOCK:
-#ifdef ENABLE_FEAT_F4HWN_INV
+        #ifdef ENABLE_FEAT_F4HWN_INV
         case MENU_SET_INV:
             //*pMin = 0;
             *pMax = ARRAY_SIZE(gSubMenu_OFF_ON) - 1;
             break;
-#endif
+        #endif
         case MENU_SET_LCK:
             //*pMin = 0;
             *pMax = ARRAY_SIZE(gSubMenu_SET_LCK) - 1;
@@ -421,6 +426,12 @@ int MENU_GetLimits(uint8_t menu_id, int32_t *pMin, int32_t *pMax)
             //*pMin = 0;
             *pMax = ARRAY_SIZE(gSubMenu_SET_MET) - 1;
             break;
+        #ifdef ENABLE_FEAT_F4HWN_AUDIO
+        case MENU_SET_AUD:
+            //*pMin = 0;
+            *pMax = ARRAY_SIZE(gSubMenu_SET_AUD) - 1;
+            break;
+        #endif
         #ifdef ENABLE_FEAT_F4HWN_NARROWER
             case MENU_SET_NFM:
                 //*pMin = 0;
@@ -583,6 +594,14 @@ void MENU_AcceptSetting(void)
             SETTINGS_SaveChannelName(gSubMenuSelection, edit);
             return;
 
+        case MENU_S_PRI_CH_1:
+            gEeprom.SCANLIST_PRIORITY_CH[0] = gSubMenuSelection;
+            break;
+
+        case MENU_S_PRI_CH_2:
+            gEeprom.SCANLIST_PRIORITY_CH[1] = gSubMenuSelection;
+            break;
+
         case MENU_SAVE:
             gEeprom.BATTERY_SAVE = gSubMenuSelection;
             break;
@@ -661,22 +680,8 @@ void MENU_AcceptSetting(void)
             gKeyLockCountdown        = gEeprom.AUTO_KEYPAD_LOCK * 30; // 15 seconds step
             break;
 
-        case MENU_S_ADD1:
-            gTxVfo->SCANLIST1_PARTICIPATION = gSubMenuSelection;
-            SETTINGS_UpdateChannel(gTxVfo->CHANNEL_SAVE, gTxVfo, true, false, true);
-            gVfoConfigureMode = VFO_CONFIGURE;
-            gFlagResetVfos    = true;
-            return;
-
-        case MENU_S_ADD2:
-            gTxVfo->SCANLIST2_PARTICIPATION = gSubMenuSelection;
-            SETTINGS_UpdateChannel(gTxVfo->CHANNEL_SAVE, gTxVfo, true, false, true);
-            gVfoConfigureMode = VFO_CONFIGURE;
-            gFlagResetVfos    = true;
-            return;
-
-        case MENU_S_ADD3:
-            gTxVfo->SCANLIST3_PARTICIPATION = gSubMenuSelection;
+        case MENU_LIST_CH:
+            gTxVfo->SCANLIST_PARTICIPATION = gSubMenuSelection;
             SETTINGS_UpdateChannel(gTxVfo->CHANNEL_SAVE, gTxVfo, true, false, true);
             gVfoConfigureMode = VFO_CONFIGURE;
             gFlagResetVfos    = true;
@@ -716,6 +721,10 @@ void MENU_AcceptSetting(void)
 
         case MENU_S_LIST:
             gEeprom.SCAN_LIST_DEFAULT = gSubMenuSelection;
+            break;
+
+        case MENU_S_PRI:
+            gEeprom.SCAN_LIST_ENABLED = gSubMenuSelection;
             break;
 
         #ifdef ENABLE_ALARM
@@ -877,11 +886,11 @@ void MENU_AcceptSetting(void)
         #endif
 
         case MENU_BATCAL:
-        {                                                                // voltages are averages between discharge curves of 1600 and 2200 mAh
+        {                                                                   // voltages are averages between discharge curves of 1600 and 2200 mAh
             // gBatteryCalibration[0] = (520ul * gSubMenuSelection) / 760;  // 5.20V empty, blinking above this value, reduced functionality below
             // gBatteryCalibration[1] = (689ul * gSubMenuSelection) / 760;  // 6.89V,  ~5%, 1 bars above this value
             // gBatteryCalibration[2] = (724ul * gSubMenuSelection) / 760;  // 7.24V, ~17%, 2 bars above this value
-            gBatteryCalibration[3] =          gSubMenuSelection;         // 7.6V,  ~29%, 3 bars above this value
+            gBatteryCalibration[3] =          gSubMenuSelection;            // 7.6V,  ~29%, 3 bars above this value
             // gBatteryCalibration[4] = (771ul * gSubMenuSelection) / 760;  // 7.71V, ~65%, 4 bars above this value
             // gBatteryCalibration[5] = 2300;
             SETTINGS_SaveBatteryCalibration(gBatteryCalibration);
@@ -890,6 +899,10 @@ void MENU_AcceptSetting(void)
 
         case MENU_BATTYP:
             gEeprom.BATTERY_TYPE = gSubMenuSelection;
+            break;
+
+        case MENU_SET_NAV:
+            gEeprom.SET_NAV = gSubMenuSelection;
             break;
 
         case MENU_F1SHRT:
@@ -929,11 +942,11 @@ void MENU_AcceptSetting(void)
         case MENU_SET_EOT:
             gSetting_set_eot = gSubMenuSelection;
             break;
-#ifdef ENABLE_FEAT_F4HWN_CTR
+        #ifdef ENABLE_FEAT_F4HWN_CTR
         case MENU_SET_CTR:
             gSetting_set_ctr = gSubMenuSelection;
             break;
-#endif
+        #endif
         case MENU_SET_INV:
             gSetting_set_inv = gSubMenuSelection;
             break;
@@ -946,6 +959,12 @@ void MENU_AcceptSetting(void)
         case MENU_SET_GUI:
             gSetting_set_gui = gSubMenuSelection;
             break;
+        #ifdef ENABLE_FEAT_F4HWN_AUDIO
+        case MENU_SET_AUD:
+            gSetting_set_audio = gSubMenuSelection;
+            RADIO_SetModulation(gRxVfo->Modulation);
+            break;
+        #endif
         #ifdef ENABLE_FEAT_F4HWN_NARROWER
             case MENU_SET_NFM:
                 gSetting_set_nfm = gSubMenuSelection;
@@ -1163,16 +1182,8 @@ void MENU_ShowCurrentSetting(void)
             gSubMenuSelection = gEeprom.AUTO_KEYPAD_LOCK;
             break;
 
-        case MENU_S_ADD1:
-            gSubMenuSelection = gTxVfo->SCANLIST1_PARTICIPATION;
-            break;
-
-        case MENU_S_ADD2:
-            gSubMenuSelection = gTxVfo->SCANLIST2_PARTICIPATION;
-            break;
-
-        case MENU_S_ADD3:
-            gSubMenuSelection = gTxVfo->SCANLIST3_PARTICIPATION;
+        case MENU_LIST_CH:
+            gSubMenuSelection = gTxVfo->SCANLIST_PARTICIPATION;
             break;
 
         case MENU_STE:
@@ -1205,10 +1216,16 @@ void MENU_ShowCurrentSetting(void)
             gSubMenuSelection = gEeprom.SCAN_LIST_DEFAULT;
             break;
 
-        case MENU_SLIST1:
-        case MENU_SLIST2:
-        case MENU_SLIST3:
-            gSubMenuSelection = RADIO_FindNextChannel(0, 1, true, UI_MENU_GetCurrentMenuId() - MENU_SLIST1 + 1);
+        case MENU_S_PRI:
+            gSubMenuSelection = gEeprom.SCAN_LIST_ENABLED;
+            break;
+
+        case MENU_S_PRI_CH_1:
+            gSubMenuSelection = gEeprom.SCANLIST_PRIORITY_CH[0];
+            break;
+
+        case MENU_S_PRI_CH_2:
+            gSubMenuSelection = gEeprom.SCANLIST_PRIORITY_CH[1];
             break;
 
         #ifdef ENABLE_ALARM
@@ -1333,6 +1350,10 @@ void MENU_ShowCurrentSetting(void)
             gSubMenuSelection = gEeprom.BATTERY_TYPE;
             break;
 
+        case MENU_SET_NAV:
+            gSubMenuSelection = gEeprom.SET_NAV;
+            break;
+
         case MENU_F1SHRT:
         case MENU_F1LONG:
         case MENU_F2SHRT:
@@ -1376,11 +1397,11 @@ void MENU_ShowCurrentSetting(void)
         case MENU_SET_EOT:
             gSubMenuSelection = gSetting_set_eot;
             break;
-#ifdef ENABLE_FEAT_F4HWN_CTR
+        #ifdef ENABLE_FEAT_F4HWN_CTR
         case MENU_SET_CTR:
             gSubMenuSelection = gSetting_set_ctr;
             break;
-#endif
+        #endif
         case MENU_SET_INV:
             gSubMenuSelection = gSetting_set_inv;
             break;
@@ -1393,6 +1414,11 @@ void MENU_ShowCurrentSetting(void)
         case MENU_SET_GUI:
             gSubMenuSelection = gSetting_set_gui;
             break;
+        #ifdef ENABLE_FEAT_F4HWN_AUDIO
+        case MENU_SET_AUD:
+            gSubMenuSelection = gSetting_set_audio;
+            break;
+        #endif
         #ifdef ENABLE_FEAT_F4HWN_NARROWER
             case MENU_SET_NFM:
                 gSubMenuSelection = gSetting_set_nfm;
@@ -1524,6 +1550,8 @@ static void MENU_Key_0_to_9(KEY_Code_t Key, bool bKeyPressed, bool bKeyHeld)
     if (UI_MENU_GetCurrentMenuId() == MENU_MEM_CH ||
         UI_MENU_GetCurrentMenuId() == MENU_DEL_CH ||
         UI_MENU_GetCurrentMenuId() == MENU_1_CALL ||
+        UI_MENU_GetCurrentMenuId() == MENU_S_PRI_CH_1 ||
+        UI_MENU_GetCurrentMenuId() == MENU_S_PRI_CH_2 ||
         UI_MENU_GetCurrentMenuId() == MENU_MEM_NAME)
     {   // enter 3-digit channel number
 
@@ -1842,7 +1870,7 @@ static void MENU_Key_STAR(const bool bKeyPressed, const bool bKeyHeld)
 static void MENU_Key_UP_DOWN(bool bKeyPressed, bool bKeyHeld, int8_t Direction)
 {
     uint8_t VFO;
-    uint8_t Channel;
+    uint16_t Channel;
     bool    bCheckScanList;
 
     if (UI_MENU_GetCurrentMenuId() == MENU_MEM_NAME && gIsInSubMenu && edit_index >= 0)
@@ -1925,21 +1953,10 @@ static void MENU_Key_UP_DOWN(bool bKeyPressed, bool bKeyHeld, int8_t Direction)
     {
         case MENU_DEL_CH:
         case MENU_1_CALL:
+        case MENU_S_PRI_CH_1:
+        case MENU_S_PRI_CH_2:            
         case MENU_MEM_NAME:
             bCheckScanList = false;
-            break;
-
-        case MENU_SLIST3:
-            bCheckScanList = true;
-            VFO = 3;
-            break;
-        case MENU_SLIST2:
-            bCheckScanList = true;
-            VFO = 2;
-            break;
-        case MENU_SLIST1:
-            bCheckScanList = true;
-            VFO = 1;
             break;
 
         default:
@@ -1948,11 +1965,48 @@ static void MENU_Key_UP_DOWN(bool bKeyPressed, bool bKeyHeld, int8_t Direction)
             return;
     }
 
-    Channel = RADIO_FindNextChannel(gSubMenuSelection + Direction, Direction, bCheckScanList, VFO);
-    if (Channel != 0xFF)
-        gSubMenuSelection = Channel;
+    if(UI_MENU_GetCurrentMenuId() == MENU_S_PRI_CH_1 || UI_MENU_GetCurrentMenuId() == MENU_S_PRI_CH_2)
+    {
+        static int16_t last;
 
-    gRequestDisplayScreen = DISPLAY_MENU;
+        if(Direction > 0 && gSubMenuSelection == MR_CHANNELS_MAX)
+        {
+            gSubMenuSelection = -1;
+            last = -1;
+        }
+        else if(Direction < 0 && gSubMenuSelection == MR_CHANNELS_MAX)
+        {
+            gSubMenuSelection = MR_CHANNELS_MAX;
+            last = MR_CHANNELS_MAX;
+        }
+
+        Channel = RADIO_FindNextChannel(gSubMenuSelection + Direction, Direction, bCheckScanList, VFO);
+        if (Channel != 0xFFFF)
+            gSubMenuSelection = Channel;
+
+        if(Direction > 0 && gSubMenuSelection < last)
+        {
+            gSubMenuSelection = MR_CHANNELS_MAX;
+        }
+        else if(Direction < 0 && gSubMenuSelection > last)
+        {
+            gSubMenuSelection = MR_CHANNELS_MAX;           
+        }
+        else
+        {
+            last = Channel;
+        }
+
+        gRequestDisplayScreen = DISPLAY_MENU;
+    }
+    else
+    {
+        Channel = RADIO_FindNextChannel(gSubMenuSelection + Direction, Direction, bCheckScanList, VFO);
+        if (Channel != 0xFFFF)
+            gSubMenuSelection = Channel;
+
+        gRequestDisplayScreen = DISPLAY_MENU;
+    }
 }
 
 void MENU_ProcessKeys(KEY_Code_t Key, bool bKeyPressed, bool bKeyHeld)
@@ -1975,24 +2029,26 @@ void MENU_ProcessKeys(KEY_Code_t Key, bool bKeyPressed, bool bKeyHeld)
             MENU_Key_MENU(bKeyPressed, bKeyHeld);
             break;
         case KEY_UP:
-            #ifdef ENABLE_NAVIG_LEFT_RIGHT
+            if(gEeprom.SET_NAV == 0) {
                 if(gIsInSubMenu)
                     MENU_Key_UP_DOWN(bKeyPressed, bKeyHeld, -1);
                 else
                     MENU_Key_UP_DOWN(bKeyPressed, bKeyHeld, 1);
-            #else
+            }
+            else {
                 MENU_Key_UP_DOWN(bKeyPressed, bKeyHeld, 1);
-            #endif
+            }
             break;
         case KEY_DOWN:
-            #ifdef ENABLE_NAVIG_LEFT_RIGHT
+            if(gEeprom.SET_NAV == 0) {
                 if(gIsInSubMenu)
                     MENU_Key_UP_DOWN(bKeyPressed, bKeyHeld, 1);
                 else
                     MENU_Key_UP_DOWN(bKeyPressed, bKeyHeld, -1);
-            #else
+            }
+            else {
                 MENU_Key_UP_DOWN(bKeyPressed, bKeyHeld, -1);
-            #endif
+            }
             break;
         case KEY_EXIT:
             MENU_Key_EXIT(bKeyPressed, bKeyHeld);

@@ -32,11 +32,7 @@
 #include "ui/inputbox.h"
 #include "ui/ui.h"
 
-#ifndef ARRAY_SIZE
-    #define ARRAY_SIZE(x) (sizeof(x) / sizeof(x[0]))
-#endif
-
-uint16_t          gFM_Channels[20];
+uint16_t          gFM_Channels[FM_CHANNELS_MAX];
 bool              gFmRadioMode;
 uint8_t           gFmRadioCountdown_500ms;
 volatile uint16_t gFmPlayCountdown_10ms;
@@ -124,7 +120,12 @@ void FM_TurnOff(void)
 
 void FM_EraseChannels(void)
 {
-    PY25Q16_SectorErase(0x003000);
+    //PY25Q16_SectorErase(0x003000);
+    
+    uint8_t clearBuf[128];
+    memset(clearBuf, 0xFF, sizeof(clearBuf));
+    PY25Q16_WriteBuffer(0x00A028, clearBuf, sizeof(clearBuf), false);
+
     memset(gFM_Channels, 0xFF, sizeof(gFM_Channels));
 }
 
@@ -318,7 +319,7 @@ static void Key_DIGITS(KEY_Code_t Key, uint8_t state)
                     return;
                 }
             }
-            else if (Channel < 20) {
+            else if (Channel < FM_CHANNELS_MAX) {
 #ifdef ENABLE_VOICE
                 gAnotherVoiceID = (VOICE_ID_t)Key;
 #endif
@@ -494,7 +495,7 @@ static void Key_UP_DOWN(uint8_t state, int8_t Step)
 
     if (gAskToSave) {
         gRequestDisplayScreen = DISPLAY_FM;
-        gFM_ChannelPosition   = NUMBER_AddWithWraparound(gFM_ChannelPosition, Step, 0, 19);
+        gFM_ChannelPosition   = NUMBER_AddWithWraparound(gFM_ChannelPosition, Step, 0, FM_CHANNELS_MAX - 1);
         return;
     }
 
@@ -552,18 +553,16 @@ void FM_ProcessKeys(KEY_Code_t Key, bool bKeyPressed, bool bKeyHeld)
             Key_MENU(state);
             break;
         case KEY_UP:
-            #ifdef ENABLE_NAVIG_LEFT_RIGHT
+            if(gEeprom.SET_NAV == 0)
                 Key_UP_DOWN(state, -1);
-            #else
+            else
                 Key_UP_DOWN(state, 1);
-            #endif
             break;
         case KEY_DOWN:
-            #ifdef ENABLE_NAVIG_LEFT_RIGHT
+            if(gEeprom.SET_NAV == 0)
                 Key_UP_DOWN(state, 1);
-            #else
+            else
                 Key_UP_DOWN(state, -1);
-            #endif
             break;
         case KEY_EXIT:
             Key_EXIT(state);
@@ -598,10 +597,10 @@ void FM_Play(void)
             return;
         }
 
-        if (gFM_ChannelPosition < 20)
+        if (gFM_ChannelPosition < FM_CHANNELS_MAX)
             gFM_Channels[gFM_ChannelPosition++] = gEeprom.FM_FrequencyPlaying;
 
-        if (gFM_ChannelPosition >= 20) {
+        if (gFM_ChannelPosition >= FM_CHANNELS_MAX) {
             FM_PlayAndUpdate();
             GUI_SelectNextDisplay(DISPLAY_FM);
             return;

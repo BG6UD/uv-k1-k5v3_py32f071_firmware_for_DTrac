@@ -94,25 +94,37 @@ void UI_DisplayStatus()
     { // SCAN indicator
         if (gScanStateDir != SCAN_OFF || SCANNER_IsScanning()) {
             if (IS_MR_CHANNEL(gNextMrChannel) && !SCANNER_IsScanning()) { // channel mode
-                switch(gEeprom.SCAN_LIST_DEFAULT) {
-                    case 0:
-                        memcpy(line + 0, BITMAP_ScanList0, sizeof(BITMAP_ScanList0));
-                        break;
-                    case 1: 
-                        memcpy(line + 0, BITMAP_ScanList1, sizeof(BITMAP_ScanList1));
-                        break;
-                    case 2:
-                        memcpy(line + 0, BITMAP_ScanList2, sizeof(BITMAP_ScanList2));
-                        break;
-                    case 3:
-                        memcpy(line + 0, BITMAP_ScanList3, sizeof(BITMAP_ScanList3));
-                        break;
-                    case 4:
-                        memcpy(line + 0, BITMAP_ScanList123, sizeof(BITMAP_ScanList123));
-                        break;
-                    case 5:
-                        memcpy(line + 0, BITMAP_ScanListAll, sizeof(BITMAP_ScanListAll));
-                        break;
+
+                uint8_t end = 0;
+
+                if(gEeprom.SCAN_LIST_DEFAULT == MR_CHANNELS_LIST + 1)
+                {
+                    if(gEeprom.SCAN_LIST_ENABLED==1) {
+                        sprintf(str, "%s+", "ALL");
+                        end = 19;
+                    }
+                    else
+                    {
+                        sprintf(str, "%s", "ALL");
+                        end = 15;
+                    }
+                }
+                else
+                {
+                    if(gEeprom.SCAN_LIST_ENABLED==1) {
+                        sprintf(str, "%02d+", gEeprom.SCAN_LIST_DEFAULT);
+                        end = 15;
+                    }
+                    else {
+                        sprintf(str, "%02d", gEeprom.SCAN_LIST_DEFAULT);
+                        end = 11;
+                    }
+                }
+
+                GUI_DisplaySmallest(str, 2, 1, true, true);
+                for (uint8_t x = 0; x < end; x++)
+                {
+                    gStatusLine[x] ^= 0x7F;
                 }
             }
             else {  // frequency mode
@@ -174,7 +186,8 @@ void UI_DisplayStatus()
                     }
                     else
                     {
-                        memcpy(line + x + 2, gFontMO, sizeof(gFontMO));
+                        if(!gAirCopyBootMode)
+                            memcpy(line + x + 2, gFontMO, sizeof(gFontMO));
                     }
                 #ifdef ENABLE_FEAT_F4HWN_RESCUE_OPS
                 }
@@ -195,14 +208,16 @@ void UI_DisplayStatus()
 
 #ifdef ENABLE_FEAT_F4HWN
     // PTT indicator
-    if (gSetting_set_ptt_session) {
-        memcpy(line + x, gFontPttOnePush, sizeof(gFontPttOnePush));
-        x1 = x + sizeof(gFontPttOnePush) + 1;
-    }
-    else
-    {
-        memcpy(line + x, gFontPttClassic, sizeof(gFontPttClassic));
-        x1 = x + sizeof(gFontPttClassic) + 1;       
+    if(!gAirCopyBootMode) {
+        if (gSetting_set_ptt_session) {
+            memcpy(line + x, gFontPttOnePush, sizeof(gFontPttOnePush));
+            x1 = x + sizeof(gFontPttOnePush) + 1;
+        }
+        else
+        {
+            memcpy(line + x, gFontPttClassic, sizeof(gFontPttClassic));
+            x1 = x + sizeof(gFontPttClassic) + 1;       
+        }
     }
     x += sizeof(gFontPttClassic) + 3;
 #endif

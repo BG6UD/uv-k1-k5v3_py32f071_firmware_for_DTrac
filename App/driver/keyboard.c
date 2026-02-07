@@ -80,36 +80,59 @@ KEY_Code_t KEYBOARD_Poll(void)
 {
     KEY_Code_t Key = KEY_INVALID;
 
-    //  if (!GPIO_CheckBit(&GPIOC->DATA, GPIOC_PIN_PTT))
-    //      return KEY_PTT;
-
-    // *****************
-
+    // Scan all 5 columns - never break early to avoid GPIO state issues
     for (unsigned int j = 0; j < 5; j++)
     {
         uint32_t reg;
-        unsigned int i;
-        unsigned int k;
+        uint32_t match_count = 0;  // Count consecutive matching reads
 
-        // Set all high
+        // Set all columns high first
         GPIO_SetOutputPin(PIN_COLS);
 
-        // Clear the pin we are selecting
+        // Clear the specific column we are selecting
         if (j > 0)
-            GPIO_ResetOutputPin(PIN_COL(j - 1));
-
-        // Read all 4 GPIO pins at once .. with de-noise, max of 8 sample loops
-        for (i = 0, k = 0, reg = 0; i < 3 && k < 8; i++, k++)
         {
-            SYSTICK_DelayUs(1);
-            uint32_t reg2 = read_rows();
-            i *= reg == reg2;
-            reg = reg2;
+            GPIO_ResetOutputPin(PIN_COL(j - 1));
         }
 
-        if (i < 3)
-            break; // noise is too bad
+        // Debounce: Read rows multiple times and look for stable reads
+        // CRITICAL FIX #1: Proper debounce logic (replaces confusing i *= syntax)
+        // CRITICAL FIX #2: Increased delay from 1µs to 10µs for real keyboard bounce capture
+        // CRITICAL FIX #3: Clear match_count if reads differ (noise detection)
+        reg = 0;
+        for (unsigned int k = 0; k < 8; k++)
+        {
+            SYSTICK_DelayUs(10);  // FIX #2: Increased from 1µs to 10µs
+            uint32_t reg2 = read_rows();
+            
+            // FIX #3: Clear match counter if values don't match
+            if (reg2 != reg)
+            {
+                match_count = 0;
+                reg = reg2;
+            }
+            else
+            {
+                match_count++;
+            }
+            
+            // Success: We have 3 consecutive matching reads = stable signal
+            if (match_count >= 2)
+            {
+                break;  // Debounce complete for this column
+            }
+        }
 
+        // FIX #1: Do NOT break on noise - continue scanning all columns
+        // Only skip key detection if debounce failed, but GPIO state is cleaned
+        if (match_count < 2)
+        {
+            // Debounce failed (too much noise), but continue to next column
+            // This prevents GPIO from staying in invalid state and blocking other columns
+            continue;
+        }
+
+        // Debounce successful, check which row is pressed in this column
         for (unsigned int i = 0; i < 4; i++)
         {
             if (!(reg & PIN_MASK_ROW(i)))
@@ -120,8 +143,14 @@ KEY_Code_t KEYBOARD_Poll(void)
         }
 
         if (Key != KEY_INVALID)
-            break;
+        {
+            break;  // Found a valid key, stop scanning
+        }
     }
+
+    // CRITICAL FIX #4: Always clean up GPIO state - set all columns high at end
+    // This ensures GPIO pins are in a known state even if function exited early due to noise
+    GPIO_SetOutputPin(PIN_COLS);
 
     return Key;
 }

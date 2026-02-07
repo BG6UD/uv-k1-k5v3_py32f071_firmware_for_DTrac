@@ -23,7 +23,8 @@
 #ifdef ENABLE_FMRADIO
 #include "app/fm.h"
 #endif
-#include "app/app.h" //for DTrac
+#include "app/app.h"        //for DTrac
+#include "driver/systick.h" //for DTrac
 #include "app/uart.h"
 #include "board.h"
 #include "py32f071_ll_dma.h"
@@ -32,7 +33,6 @@
 #include "driver/crc.h"
 #include "driver/eeprom.h"
 #include "driver/gpio.h"
-#include "driver/systick.h" //for DTrac
 
 #if defined(ENABLE_UART)
 #include "driver/uart.h"
@@ -538,157 +538,157 @@ static void CMD_051D(uint32_t Port, const uint8_t *pBuffer)
 // for DTrac app CTCSS_CODE
 static void CMD_9999(const uint8_t *pBuffer)
 {
-	const CMD_9999_t *pCmd = (const CMD_9999_t *)pBuffer;
-	uint8_t ctcssCode = pCmd->CTCSS_CODE;
-	if (gRxVfo->pTX->Code != ctcssCode)
-	{
-		if (ctcssCode < 99)
-		{
-			gRxVfo->pTX->CodeType = CODE_TYPE_CONTINUOUS_TONE;
-			gRxVfo->pTX->Code = ctcssCode;
-		}
-		else
-		{
-			gRxVfo->pTX->Code = 99; // 修复亚音偶发失步的故障
-			gRxVfo->pTX->CodeType = CODE_TYPE_OFF;
-		}
-		BK4819_SetCTCSSFrequency(CTCSS_Options[ctcssCode]);
-	}
+    const CMD_9999_t *pCmd = (const CMD_9999_t *)pBuffer;
+    uint8_t ctcssCode = pCmd->CTCSS_CODE;
+    if (gRxVfo->pTX->Code != ctcssCode)
+    {
+        if (ctcssCode < 99)
+        {
+            gRxVfo->pTX->CodeType = CODE_TYPE_CONTINUOUS_TONE;
+            gRxVfo->pTX->Code = ctcssCode;
+        }
+        else
+        {
+            gRxVfo->pTX->Code = 99; // 修复亚音偶发失步的故障
+            gRxVfo->pTX->CodeType = CODE_TYPE_OFF;
+        }
+        BK4819_SetCTCSSFrequency(CTCSS_Options[ctcssCode]);
+    }
 }
 
 // for DTrac app downFreq
 static void CMD_8888(uint32_t Port, const uint8_t *pBuffer)
 {
-	const CMD_8888_t *pCmd = (const CMD_8888_t *)pBuffer;
-	uint32_t downFrequency = pCmd->DownFrequency / 10;
+    const CMD_8888_t *pCmd = (const CMD_8888_t *)pBuffer;
+    uint32_t downFrequency = pCmd->DownFrequency / 10;
 
-	if (gRxVfo->pRX->Frequency != downFrequency)
-	{
-		gRxVfo->pRX->Frequency = downFrequency;
+    if (gRxVfo->pRX->Frequency != downFrequency)
+    {
+        gRxVfo->pRX->Frequency = downFrequency;
 
-		if (!gPttIsPressed)
-		{
-			// BK4819_SetAGC(false);
-			// SYSTICK_DelayUs(10);
+        if (!gPttIsPressed)
+        {
+            // BK4819_SetAGC(false);
+            // SYSTICK_DelayUs(10);
 
-			BK4819_SetFrequency(downFrequency);
-			BK4819_PickRXFilterPathBasedOnFrequency(downFrequency);
+            BK4819_SetFrequency(downFrequency);
+            BK4819_PickRXFilterPathBasedOnFrequency(downFrequency);
 
-			uint16_t reg30 = BK4819_ReadRegister(BK4819_REG_30);
-			if (gMonitor)
-			{
-				BK4819_WriteRegister(BK4819_REG_30, reg30 & ~0x8000);
-				SYSTICK_DelayUs(100);
-				BK4819_WriteRegister(BK4819_REG_30, reg30 | 0x8000);
-				SYSTICK_DelayUs(100);
-				BK4819_WriteRegister(BK4819_REG_30, reg30);
-			}
-			else
-			{
-				// VCO Calibration bit 15 0x8000
-				BK4819_WriteRegister(BK4819_REG_30, reg30 | 0x8000);
-				SYSTICK_DelayUs(100);
-				BK4819_WriteRegister(BK4819_REG_30, reg30);
-			}
+            uint16_t reg30 = BK4819_ReadRegister(BK4819_REG_30);
+            if (gMonitor)
+            {
+                BK4819_WriteRegister(BK4819_REG_30, reg30 & ~0x8000);
+                SYSTICK_DelayUs(100);
+                BK4819_WriteRegister(BK4819_REG_30, reg30 | 0x8000);
+                SYSTICK_DelayUs(100);
+                BK4819_WriteRegister(BK4819_REG_30, reg30);
+            }
+            else
+            {
+                // VCO Calibration bit 15 0x8000
+                BK4819_WriteRegister(BK4819_REG_30, reg30 | 0x8000);
+                SYSTICK_DelayUs(100);
+                BK4819_WriteRegister(BK4819_REG_30, reg30);
+            }
 
-			BK4819_SetAGC(true);
+            BK4819_SetAGC(true);
 
-			SYSTICK_DelayUs(1500);
+            SYSTICK_DelayUs(1500);
 
-			SendVersion(Port);
-		}
+            SendVersion(Port);
+        }
 
-		gUpdateDisplay = true;
-	}
+        gUpdateDisplay = true;
+    }
 }
 
 // for DTrac app upFreq
 static void CMD_7777(const uint8_t *pBuffer)
 {
-	const CMD_7777_t *pCmd = (const CMD_7777_t *)pBuffer;
-	uint32_t upFrequency = pCmd->UpFrequency / 10;
-	if (gRxVfo->pTX->Frequency != upFrequency)
-	{
-		gRxVfo->pTX->Frequency = upFrequency;
+    const CMD_7777_t *pCmd = (const CMD_7777_t *)pBuffer;
+    uint32_t upFrequency = pCmd->UpFrequency / 10;
+    if (gRxVfo->pTX->Frequency != upFrequency)
+    {
+        gRxVfo->pTX->Frequency = upFrequency;
 
-		if (gPttIsPressed)
-		{
-			BK4819_PickRXFilterPathBasedOnFrequency(upFrequency);
-			BK4819_SetFrequency(upFrequency);
+        if (gPttIsPressed)
+        {
+            BK4819_PickRXFilterPathBasedOnFrequency(upFrequency);
+            BK4819_SetFrequency(upFrequency);
 
-			uint16_t reg30 = BK4819_ReadRegister(BK4819_REG_30);
+            uint16_t reg30 = BK4819_ReadRegister(BK4819_REG_30);
 
-			// VCO Calibration bit 15 0x8000
-			BK4819_WriteRegister(BK4819_REG_30, reg30 | 0x8000);
-			SYSTICK_DelayUs(100);
-			BK4819_WriteRegister(BK4819_REG_30, reg30);
+            // VCO Calibration bit 15 0x8000
+            BK4819_WriteRegister(BK4819_REG_30, reg30 | 0x8000);
+            SYSTICK_DelayUs(100);
+            BK4819_WriteRegister(BK4819_REG_30, reg30);
 
-			SYSTICK_DelayUs(1500);
-		}
+            SYSTICK_DelayUs(1500);
+        }
 
-		gUpdateDisplay = true;
-	}
+        gUpdateDisplay = true;
+    }
 }
 
 // for DTrac app mode
 static void CMD_6666(const uint8_t *pBuffer)
 {
-	const CMD_6666_t *pCmd = (const CMD_6666_t *)pBuffer;
-	// char mode = pCmd->Mode;
-	uint8_t mode;
-	switch (pCmd->Mode)
-	{
-	case 'F':
-		mode = MODULATION_FM;
-		break;
-	case 'A':
-		mode = MODULATION_AM;
-		break;
-	case 'U':
-		mode = MODULATION_USB;
-		break;
+    const CMD_6666_t *pCmd = (const CMD_6666_t *)pBuffer;
+    // char mode = pCmd->Mode;
+    uint8_t mode;
+    switch (pCmd->Mode)
+    {
+    case 'F':
+        mode = MODULATION_FM;
+        break;
+    case 'A':
+        mode = MODULATION_AM;
+        break;
+    case 'U':
+        mode = MODULATION_USB;
+        break;
 #ifdef ENABLE_BYP_RAW_DEMODULATORS
-	case 'B':
-		mode = MODULATION_BYP;
-		break;
-	case 'R':
-		mode = MODULATION_RAW;
-		break;
+    case 'B':
+        mode = MODULATION_BYP;
+        break;
+    case 'R':
+        mode = MODULATION_RAW;
+        break;
 #endif
-	default:
-		mode = MODULATION_FM;
-		break;
-	}
-	if (gRxVfo->Modulation != mode)
-	{
-		gRxVfo->Modulation = mode;
-		RADIO_SetModulation(mode);
-	}
+    default:
+        mode = MODULATION_FM;
+        break;
+    }
+    if (gRxVfo->Modulation != mode)
+    {
+        gRxVfo->Modulation = mode;
+        RADIO_SetModulation(mode);
+    }
 
-	gUpdateDisplay = true;
+    gUpdateDisplay = true;
 }
 
 // for DTrac app MONITOR
 char lastMonitorStatus = 'U';
 static void CMD_5555(const uint8_t *pBuffer)
 {
-	const CMD_5555_t *pCmd = (const CMD_5555_t *)pBuffer;
+    const CMD_5555_t *pCmd = (const CMD_5555_t *)pBuffer;
 
-	if (lastMonitorStatus != pCmd->MonitorStatus)
-	{
-		switch (pCmd->MonitorStatus)
-		{
-		case 'Y':
-			RADIO_SetupRegisters(true);
-			APP_StartListening(FUNCTION_MONITOR);
-			break;
-		case 'N':
-			RADIO_SetupRegisters(true);
-			APP_StartListening(FUNCTION_RECEIVE);
+    if (lastMonitorStatus != pCmd->MonitorStatus)
+    {
+        switch (pCmd->MonitorStatus)
+        {
+        case 'Y':
+            RADIO_SetupRegisters(true);
+            APP_StartListening(FUNCTION_MONITOR);
             break;
-		}
-		lastMonitorStatus = pCmd->MonitorStatus;
-	}
+        case 'N':
+            RADIO_SetupRegisters(true);
+            APP_StartListening(FUNCTION_RECEIVE);
+            break;
+        }
+        lastMonitorStatus = pCmd->MonitorStatus;
+    }
 }
 
 #ifdef ENABLE_EXTRA_UART_CMD
@@ -900,13 +900,25 @@ bool UART_IsCommandAvailable(uint32_t Port)
         return false;
     }
 
-    while (1)
+    // Limit iterations to prevent long loops when buffer is full of non-command data
+    uint16_t maxIterations = ReadBufSize + 1;
+
+    while (maxIterations--)
     {
         if ((*pReadPointer) == DmaLength)
             return false;
 
-        while ((*pReadPointer) != DmaLength && ReadBuf[*pReadPointer] != 0xABU)
+        // Find 0xAB with iteration limit
+        uint16_t searchLimit = ReadBufSize;
+        while ((*pReadPointer) != DmaLength && ReadBuf[*pReadPointer] != 0xABU && searchLimit--)
             *pReadPointer = DMA_INDEX((*pReadPointer), 1, ReadBufSize);
+
+        if (searchLimit == 0)
+        {
+            // Too many bytes without finding 0xAB - sync to current position and exit
+            *pReadPointer = DmaLength;
+            return false;
+        }
 
         if ((*pReadPointer) == DmaLength)
             return false;
@@ -923,6 +935,13 @@ bool UART_IsCommandAvailable(uint32_t Port)
             break;
 
         *pReadPointer = DMA_INDEX(*pReadPointer, 1, ReadBufSize);
+    }
+
+    if (maxIterations == 0)
+    {
+        // Safety: too many outer loop iterations
+        *pReadPointer = DmaLength;
+        return false;
     }
 
     Index = DMA_INDEX(*pReadPointer, 2, ReadBufSize);
@@ -1031,7 +1050,6 @@ void UART_HandleCommand(uint32_t Port)
     case 0x5555:
         CMD_5555(pUART_Command->Buffer); // for DTrac app MONITOR
         break;
-
     case 0x0514:
         CMD_0514(Port, pUART_Command->Buffer);
         break;

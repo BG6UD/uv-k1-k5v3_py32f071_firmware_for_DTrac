@@ -61,8 +61,10 @@ BOOT_Mode_t BOOT_GetMode(void)
             return BOOT_MODE_F_LOCK;
 
         #ifdef ENABLE_AIRCOPY
-            if (Keys[0] == KEY_SIDE2)
+            if (Keys[0] == KEY_SIDE2) {
+                gAirCopyBootMode = true;
                 return BOOT_MODE_AIRCOPY;
+            }
         #endif
     }
 
@@ -95,7 +97,7 @@ void BOOT_ProcessMode(BOOT_Mode_t Mode)
             gEeprom.KEY_2_LONG_PRESS_ACTION  = ACTION_OPT_NONE;
             gEeprom.KEY_M_LONG_PRESS_ACTION  = ACTION_OPT_NONE;
 
-            RADIO_InitInfo(gRxVfo, FREQ_CHANNEL_LAST - 1, 43400000); // LPD
+            RADIO_InitInfo(gRxVfo, FREQ_CHANNEL_LAST - 1, DEFAULT_FREQ); // LPD
 
             gRxVfo->CHANNEL_BANDWIDTH        = BANDWIDTH_NARROW;
             gRxVfo->OUTPUT_POWER             = OUTPUT_POWER_LOW1;

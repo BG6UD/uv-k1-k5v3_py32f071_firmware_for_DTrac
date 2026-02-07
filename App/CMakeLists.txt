@@ -157,9 +157,6 @@ enable_feature(ENABLE_BOOT_BEEPS)
 enable_feature(ENABLE_SHOW_CHARGE_LEVEL)
 enable_feature(ENABLE_REVERSE_BAT_SYMBOL)
 enable_feature(ENABLE_NO_CODE_SCAN_TIMEOUT)
-enable_feature(ENABLE_AM_FIX
-    am_fix.c
-)
 enable_feature(ENABLE_SQUELCH_MORE_SENSITIVE)
 enable_feature(ENABLE_FASTER_CHANNEL_SCAN)
 enable_feature(ENABLE_RSSI_BAR)
@@ -169,7 +166,6 @@ enable_feature(ENABLE_REDUCE_LOW_MID_TX_POWER)
 enable_feature(ENABLE_BYP_RAW_DEMODULATORS)
 enable_feature(ENABLE_BLMIN_TMP_OFF)
 enable_feature(ENABLE_SCAN_RANGES)
-enable_feature(ENABLE_NAVIG_LEFT_RIGHT)
 
 # ---- CONTRIB MODS ----
 
@@ -199,7 +195,8 @@ enable_feature(ENABLE_FEAT_F4HWN_INV)
 enable_feature(ENABLE_FEAT_F4HWN_CTR)
 enable_feature(ENABLE_FEAT_F4HWN_RESCUE_OPS)
 enable_feature(ENABLE_FEAT_F4HWN_VOL)
-enable_feature(ENABLE_FEAT_F4HWN_RESET_CHANNEL)
+enable_feature(ENABLE_FEAT_F4HWN_AUDIO)
+enable_feature(ENABLE_FEAT_F4HWN_RESET_VFO)
 enable_feature(ENABLE_FEAT_F4HWN_PMR)
 enable_feature(ENABLE_FEAT_F4HWN_GMRS_FRS_MURS)
 enable_feature(ENABLE_FEAT_F4HWN_CA)
@@ -207,7 +204,6 @@ enable_feature(ENABLE_FEAT_F4HWN_DEBUG)
 
 # ---- DEBUGGING ----
 
-enable_feature(ENABLE_AM_FIX_SHOW_DATA)
 enable_feature(ENABLE_AGC_SHOW_DATA)
 enable_feature(ENABLE_UART_RW_BK_REGS)
 

@@ -70,7 +70,15 @@ void UI_DisplayAircopy(void)
 
     memset(String, 0, sizeof(String));
 
-    percent = (gAirCopyBlockNumber * 10000) / 120;
+    // Get the current map and calculate percentage based on its total blocks
+    const AIRCOPY_TransferMap_t *currentMap = AIRCOPY_GetCurrentMap();
+
+    uint16_t doneBlocks = gAirCopyBlockNumber + gErrorsDuringAirCopy;
+
+    if (doneBlocks > currentMap->total_blocks)
+        doneBlocks = currentMap->total_blocks;
+
+    percent = (doneBlocks * 10000) / currentMap->total_blocks;
 
     if (gAirCopyIsSendMode == 0) {
         sprintf(String, "RCV:%02u.%02u%% E:%d", percent / 100, percent % 100, gErrorsDuringAirCopy);
@@ -86,7 +94,7 @@ void UI_DisplayAircopy(void)
         gFrameBuffer[4][1] = 0x3c;
         gFrameBuffer[4][2] = 0x42;
 
-        for(uint8_t i = 1; i <= 122; i++)
+        for(uint8_t i = 1; i <= AIRCOPY_BAR_WIDTH + 2; i++)
         {
             gFrameBuffer[4][2 + i] = 0x81;
         }
@@ -94,23 +102,58 @@ void UI_DisplayAircopy(void)
         gFrameBuffer[4][125] = 0x42;
         gFrameBuffer[4][126] = 0x3c;
     }
-
-    if(gAirCopyBlockNumber + gErrorsDuringAirCopy != 0)
+    
+    // Draw memory selection
+    if(gAircopyState == AIRCOPY_READY)
     {
-        // Check CRC
-        if(gErrorsDuringAirCopy != lErrorsDuringAirCopy)
+        doneBlocks = 0;
+
+        memset(gFrameBuffer[5], 0, 128);
+        memset(gFrameBuffer[6], 0, 128);
+
+        if(gAircopyCurrentMapIndex < AIRCOPY_NUM_BANKS) {   
+            sprintf(String, "MEM %03u - %03u%", (gAircopyCurrentMapIndex * 128) + 1, (gAircopyCurrentMapIndex + 1) * 128);
+        }
+        else
         {
-            set_bit(crc, gAirCopyBlockNumber + gErrorsDuringAirCopy);
+            sprintf(String, "Settings");            
+        }
+        UI_PrintString(String, 2, 127, 5, 8);
+    }
+
+    if (doneBlocks > 0)
+    {
+        // Track CRC errors per real block index
+        if (gErrorsDuringAirCopy != lErrorsDuringAirCopy)
+        {
+            // Mark the last processed block as faulty
+            set_bit(crc, doneBlocks - 1);
             lErrorsDuringAirCopy = gErrorsDuringAirCopy;
         }
 
-        for(uint8_t i = 0; i < (gAirCopyBlockNumber + gErrorsDuringAirCopy); i++)
+        const AIRCOPY_TransferMap_t *currentMap = AIRCOPY_GetCurrentMap();
+
+        uint16_t total = currentMap->total_blocks;
+        uint16_t done  = gAirCopyBlockNumber + gErrorsDuringAirCopy;
+        
+        if (done > total) done = total;
+
+        for (uint8_t col = 0; col < AIRCOPY_BAR_WIDTH; col++)
         {
-            if(get_bit(crc, i) == 0)
-            {
-                gFrameBuffer[4][i + 4] = 0xbd;
-            }
+            /* Map column [0..BAR_WIDTH-1] to block [0..total-1] */
+            uint16_t b = (uint16_t)((col * (uint32_t)total) / AIRCOPY_BAR_WIDTH);
+
+            bool processed = (b < done);
+            bool error     = processed && get_bit(crc, b);
+
+            if (!processed)
+                gFrameBuffer[4][col + 4] = 0x81;   // not yet processed
+            else if (error)
+                gFrameBuffer[4][col + 4] = 0x81;   // error gap (intentional hole)
+            else
+                gFrameBuffer[4][col + 4] = 0xBD;   // ok filled
         }
+
     }
 
     ST7565_BlitFullScreen();

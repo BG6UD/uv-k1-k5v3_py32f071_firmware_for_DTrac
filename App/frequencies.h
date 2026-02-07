@@ -20,6 +20,7 @@
 #include <stdint.h>
 
 #define _1GHz_in_KHz 100000000
+#define DEFAULT_FREQ 43450000 // Use for Reset and Aircopy
 
 typedef struct {
     const uint32_t lower;

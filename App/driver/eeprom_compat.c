@@ -38,30 +38,33 @@ typedef struct
 #define _MK_MAPPING(PY25Q16_Addr, EEPROM_From, EEPROM_To) {PY25Q16_Addr, EEPROM_From, EEPROM_To - EEPROM_From}
 
 static const AddrMapping_t ADDR_MAPPINGS[] = {
-    // Sorted by EEPROM addr
-    _MK_MAPPING(0x000000, 0x0000, 0x0c80),  //
-    _MK_MAPPING(0x001000, 0x0c80, 0x0d60),  //
-    _MK_MAPPING(0x002000, 0x0d60, 0x0e30),  //
-    _MK_MAPPING(HOLE_ADDR, 0x0e30, 0x0e40), //
-    _MK_MAPPING(0x003000, 0x0e40, 0x0e68),  //
-    _MK_MAPPING(HOLE_ADDR, 0x0e68, 0x0e70), //
-    _MK_MAPPING(0x004000, 0x0e70, 0x0e80),  //
-    _MK_MAPPING(0x005000, 0x0e80, 0x0e88),  //
-    _MK_MAPPING(0x006000, 0x0e88, 0x0e90),  //
-    _MK_MAPPING(0x007000, 0x0e90, 0x0ee0),  //
-    _MK_MAPPING(0x008000, 0x0ee0, 0x0f18),  //
-    _MK_MAPPING(0x009000, 0x0f18, 0x0f20),  //
-    _MK_MAPPING(HOLE_ADDR, 0x0f20, 0x0f30), //
-    _MK_MAPPING(0x00a000, 0x0f30, 0x0f40),  //
-    _MK_MAPPING(0x00b000, 0x0f40, 0x0f48),  //
-    _MK_MAPPING(HOLE_ADDR, 0x0f48, 0x0f50), //
-    _MK_MAPPING(0x00e000, 0x0f50, 0x1bd0),  //
-    _MK_MAPPING(HOLE_ADDR, 0x1bd0, 0x1c00), //
-    _MK_MAPPING(0x00f000, 0x1c00, 0x1d00),  //
-    _MK_MAPPING(HOLE_ADDR, 0x1d00, 0x1e00), //
-    _MK_MAPPING(0x010000, 0x1e00, 0x1f90),  //
-    _MK_MAPPING(HOLE_ADDR, 0x1f90, 0x1ff0), //
-    _MK_MAPPING(0x00c000, 0x1ff0, 0x2000),  //
+    _MK_MAPPING(0x000000, 0x000000, 0x001000),  // 256 MR Freq * 16 Bytes (ex 0x000000)
+    _MK_MAPPING(0x001000, 0x001000, 0x002000),  // 256 MR Freq * 16 Bytes
+    _MK_MAPPING(0x002000, 0x002000, 0x003000),  // 256 MR Freq * 16 Bytes
+    _MK_MAPPING(0x003000, 0x003000, 0x004000),  // 256 MR Freq * 16 Bytes
+
+    _MK_MAPPING(0x004000, 0x004000, 0x005000),  // 256 MR Name * 16 Bytes (ex 0x00e000)
+    _MK_MAPPING(0x005000, 0x005000, 0x006000),  // 256 MR Name * 16 Bytes
+    _MK_MAPPING(0x006000, 0x006000, 0x007000),  // 256 MR Name * 16 Bytes
+    _MK_MAPPING(0x007000, 0x007000, 0x008000),  // 256 MR Name * 16 Bytes
+
+    _MK_MAPPING(0x008000, 0x008000, 0x00880E),  // 1024 MR  + 7 VFO Attributes * 2 Bytes (ex 0x002000)
+
+    _MK_MAPPING(0x009000, 0x009000, 0x0090D6),  // 14 VFO * 16 Bytes (ex 0x001000)
+
+    _MK_MAPPING(0x00A000, 0x00A000, 0x00A170),  // Settings * 16 Bytes (ex 0x004000)        0x00A000 -> 0x00A010
+                                                // Settings * 16 Bytes (ex 0x005000)        0x00A010 -> 0x00A020
+                                                // Settings FM * 8 Bytes (0x006000)         0x00A020 -> 0x00A028
+                                                // MR FM * 128 Bytes (0x003000)             0x00A028 -> 0x00A0A8
+                                                // Settings * 80 Bytes (0x007000)           0x00A0A8 -> 0x00A0F8
+                                                // Settings * 56 Bytes (0x008000)           0x00A0F8 -> 0x00A130
+                                                // Settings Scanlist * 8 Bytes (0x009000)   0x00A130 -> 0x00A140
+                                                // Settings AES * 16 Bytes (0x00A000)       0x00A140 -> 0x00A150
+                                                // Settings * 8 Bytes (0x00B000)            0x00A150 -> 0x00A158
+                                                // Settings F4HWN * 8 Bytes (0x00C000)      0x00A158 -> 0x00A160
+                                                // Settings Version * 16 Bytes              0x00A160 -> 0x00A170
+
+    _MK_MAPPING(0x010000, 0x00B000, 0x00B200),  // Calibration 512 Bytes!!!
 };
 
 static void AddrTranslate(uint16_t EEPROM_Addr, uint16_t Size, uint32_t *PY25Q16_Addr_out, uint16_t *Size_out, bool *End_out);

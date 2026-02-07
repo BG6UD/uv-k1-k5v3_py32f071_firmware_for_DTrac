@@ -70,7 +70,11 @@ Download the official build from:
 
 ## Download unbrick toolkit
 
-Download the [unbrick toolkit archive](https://github.com/user-attachments/files/24021884/unbrick_k5_v1.zip) and extract it on your PC.
+Download the [unbrick toolkit archive](https://github.com/user-attachments/files/24083102/unbrick_k5_v1.zip) and extract it on your PC.
+
+> [!NOTE]
+> For Windows users, Diogo [@dguimaraes88](https://github.com/dguimaraes88) has prepared a [dedicated version](https://1drv.ms/f/c/5d40488ea2119b08/IgAshx87imRRRLuy6jx0-xCzAY25Zj3vSB3H5TlePGPj5Uw?e=orBJJ6) of the unbrick toolkit to make it easier to use. Many thanks to him for the initiative and for the time he invested in it.
+
 
 ## Unbrick procedure
 
@@ -102,6 +106,8 @@ From the `unbrick_k5_v1` directory:
 openocd -f ./interface/stlink.cfg -f ./target/dp32g030.cfg -c "init; reset halt; uv_flash_bl bootloader.bin; shutdown"
 `
 
+> [!NOTE]
+> For Windows users, you must either run this command with administrator privileges or launch OpenOCD.exe as an Administrator.
 
 https://github.com/user-attachments/assets/a511fdb3-a3a3-4fe1-91cc-31e765221b22
 

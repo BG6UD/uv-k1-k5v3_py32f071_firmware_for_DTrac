@@ -53,68 +53,114 @@ const char gModulationStr[MODULATION_UKNOWN][4] = {
 #endif
 };
 
+#ifdef ENABLE_FEAT_F4HWN_AUDIO
+    static void AUDIO_ApplyProfile(uint8_t profile)
+    {
+        switch (profile)
+        {
+            default:
+            case 0: // FLAT
+                BK4819_WriteRegister(0x54, 0x9009);
+                BK4819_WriteRegister(0x55, 0x3200);
+                break;
+
+            case 1: // CLEAN
+                BK4819_WriteRegister(0x54, 0x9009);
+                BK4819_WriteRegister(0x55, 0x33A9);
+                break;
+
+            case 2: // MID
+                BK4819_WriteRegister(0x54, 0x9009);
+                BK4819_WriteRegister(0x55, 0x3600);
+                break;
+
+            case 3: // BOOST
+                BK4819_WriteRegister(0x54, 0x8546);
+                BK4819_WriteRegister(0x55, 0x3AF0);
+                break;
+
+            case 4: // MAX
+                BK4819_WriteRegister(0x54, 0x8566);
+                BK4819_WriteRegister(0x55, 0x3D00);
+                break;
+        }
+    }
+#endif
+
+bool RADIO_CheckValidList(uint8_t scanList)
+{
+    if(scanList == MR_CHANNELS_LIST + 1)
+        return true;
+
+    for (uint16_t i = 0; IS_MR_CHANNEL(i); i++) {
+        const ChannelAttributes_t* att = MR_GetChannelAttributes(i);
+        if(att->scanlist == scanList && att->exclude == false)
+        {
+            return true;
+        }
+    }
+    return false;
+}
+
+void RADIO_NextValidList(void)
+{
+    uint8_t startList = gEeprom.SCAN_LIST_DEFAULT;
+    uint8_t attempts = 0;
+    const uint8_t MAX_LISTS = MR_CHANNELS_LIST + 2;  // 1-25, includes ALL
+    
+    do {
+        // Move to next scan list, wrapping around from 25 to 1
+        gEeprom.SCAN_LIST_DEFAULT = ((gEeprom.SCAN_LIST_DEFAULT + 1) % MAX_LISTS) ?: 1;
+        attempts++;
+        
+        // Check if current list has valid channels
+        if (RADIO_CheckValidList(gEeprom.SCAN_LIST_DEFAULT))
+            return;
+            
+    // Stop if we've cycled through all lists or made too many attempts
+    } while (gEeprom.SCAN_LIST_DEFAULT != startList && attempts < MAX_LISTS);
+    
+    // Safety fallback: if no valid list found, switch to ALL mode
+    // This prevents infinite loops and ensures scanning can continue
+    if (!RADIO_CheckValidList(gEeprom.SCAN_LIST_DEFAULT)) {
+        gEeprom.SCAN_LIST_DEFAULT = MR_CHANNELS_LIST + 1;  // ALL
+    }
+}
+
 bool RADIO_CheckValidChannel(uint16_t channel, bool checkScanList, uint8_t scanList)
 {
+    const ChannelAttributes_t* att = MR_GetChannelAttributes(channel);
+
     // return true if the channel appears valid
     if (!IS_MR_CHANNEL(channel))
         return false;
-
-    const ChannelAttributes_t att = gMR_ChannelAttributes[channel];
-
-    if (checkScanList && gMR_ChannelExclude[channel] == true)
+    if (checkScanList && att->exclude == true)
         return false;
-
-    if (att.band > BAND7_470MHz)
+    if (att->band > BAND7_470MHz)
         return false;
-
-    if (!checkScanList || scanList > 4)
+    if (!checkScanList || (scanList > MR_CHANNELS_LIST && att->scanlist != 0) || (scanList > 0 && att->scanlist == MR_CHANNELS_LIST + 1))
         return true;
-
-    /*
-    if(scanList == 0 && (att.scanlist1 == 1 || att.scanlist2 == 1 || att.scanlist3 == 1))
-    {
+    if ((scanList == 0) || (scanList != att->scanlist)) {
         return false;
     }
-    else if(scanList == 1 && att.scanlist1 != 1)
-    {
-        return false;
-    }
-    else if(scanList == 2 && att.scanlist2 != 1)
-    {
-        return false;
-    }
-    else if(scanList == 3 && att.scanlist3 != 1)
-    {
-        return false;
-    }
-    else if(scanList == 4 && (att.scanlist1 == 0 && att.scanlist2 == 0 && att.scanlist3 == 0))
-    {
-        return false;
-    }
-    */
-
-    if ((scanList == 0 && (att.scanlist1 == 1 || att.scanlist2 == 1 || att.scanlist3 == 1)) ||
-        (scanList == 1 && att.scanlist1 != 1) ||
-        (scanList == 2 && att.scanlist2 != 1) ||
-        (scanList == 3 && att.scanlist3 != 1) ||
-        (scanList == 4 && (att.scanlist1 == 0 && att.scanlist2 == 0 && att.scanlist3 == 0))) {
-        return false;
-    }
-
-    //return true;
-
-    // I don't understand what this code is for...
     
-    const uint8_t PriorityCh1 = gEeprom.SCANLIST_PRIORITY_CH1[scanList - 1];
-    const uint8_t PriorityCh2 = gEeprom.SCANLIST_PRIORITY_CH2[scanList - 1];
-
-    return PriorityCh1 != channel && PriorityCh2 != channel;
+    // Exclude priority channels ONLY if SCAN_LIST_ENABLED is active
+    // Otherwise, treat them as normal channels in the list
+    if (gEeprom.SCAN_LIST_ENABLED)
+    {
+        const uint16_t PriorityCh1 = gEeprom.SCANLIST_PRIORITY_CH[0];
+        const uint16_t PriorityCh2 = gEeprom.SCANLIST_PRIORITY_CH[1];
+        if (PriorityCh1 == channel || PriorityCh2 == channel)
+            return false;  // Excluded because it's a priority channel and they are enabled
+    }
+    
+    return true;
 }
 
-uint8_t RADIO_FindNextChannel(uint8_t Channel, int8_t Direction, bool bCheckScanList, uint8_t VFO)
+uint16_t RADIO_FindNextChannel(uint16_t Channel, int8_t Direction, bool bCheckScanList, uint8_t VFO)
 {
-    for (unsigned int i = 0; IS_MR_CHANNEL(i); i++, Channel += Direction) {
-        if (Channel == 0xFF) {
+    for (uint16_t i = 0; IS_MR_CHANNEL(i); i++, Channel += Direction) {
+        if (Channel == 0xFFFF) {
             Channel = MR_CHANNEL_LAST;
         } else if (!IS_MR_CHANNEL(Channel)) {
             Channel = MR_CHANNEL_FIRST;
@@ -125,17 +171,15 @@ uint8_t RADIO_FindNextChannel(uint8_t Channel, int8_t Direction, bool bCheckScan
         }
     }
 
-    return 0xFF;
+    return 0xFFFF;
 }
 
-void RADIO_InitInfo(VFO_Info_t *pInfo, const uint8_t ChannelSave, const uint32_t Frequency)
+void RADIO_InitInfo(VFO_Info_t *pInfo, const uint16_t ChannelSave, const uint32_t Frequency)
 {
     memset(pInfo, 0, sizeof(*pInfo));
 
     pInfo->Band                     = FREQUENCY_GetBand(Frequency);
-    pInfo->SCANLIST1_PARTICIPATION  = false;
-    pInfo->SCANLIST2_PARTICIPATION  = false;
-    pInfo->SCANLIST3_PARTICIPATION  = false;
+    pInfo->SCANLIST_PARTICIPATION   = 0;
     pInfo->STEP_SETTING             = STEP_12_5kHz;
     pInfo->StepFrequency            = gStepFrequencyTable[pInfo->STEP_SETTING];
     pInfo->CHANNEL_SAVE             = ChannelSave;
@@ -168,7 +212,7 @@ void RADIO_ConfigureChannel(const unsigned int VFO, const unsigned int configure
             gEeprom.ScreenChannel[VFO] = FREQ_CHANNEL_FIRST + BAND6_400MHz;
     }
 
-    uint8_t channel = gEeprom.ScreenChannel[VFO];
+    uint16_t channel = gEeprom.ScreenChannel[VFO];
 
     if (IS_VALID_CHANNEL(channel)) {
 #ifdef ENABLE_NOAA
@@ -188,7 +232,7 @@ void RADIO_ConfigureChannel(const unsigned int VFO, const unsigned int configure
 
         if (IS_MR_CHANNEL(channel)) {
             channel = RADIO_FindNextChannel(channel, RADIO_CHANNEL_UP, false, VFO);
-            if (channel == 0xFF) {
+            if (channel == 0xFFFF) {
                 channel                    = gEeprom.FreqChannel[VFO];
                 gEeprom.ScreenChannel[VFO] = gEeprom.FreqChannel[VFO];
             }
@@ -201,50 +245,42 @@ void RADIO_ConfigureChannel(const unsigned int VFO, const unsigned int configure
     else
         channel = FREQ_CHANNEL_LAST - 1;
 
-    ChannelAttributes_t att = gMR_ChannelAttributes[channel];
-    if (att.__val == 0xFF) { // invalid/unused channel
+    ChannelAttributes_t* att = MR_GetChannelAttributes(channel);
+    if (att->__val == 0xFFFF) { // invalid/unused channel
         if (IS_MR_CHANNEL(channel)) {
             channel                    = gEeprom.FreqChannel[VFO];
             gEeprom.ScreenChannel[VFO] = channel;
         }
 
-        uint8_t bandIdx = channel - FREQ_CHANNEL_FIRST;
+        uint16_t bandIdx = channel - FREQ_CHANNEL_FIRST;
         RADIO_InitInfo(pVfo, channel, frequencyBandTable[bandIdx].lower);
         return;
     }
 
-    uint8_t band = att.band;
+    uint8_t band = att->band;
     if (band > BAND7_470MHz) {
         band = BAND6_400MHz;
     }
 
-    bool bParticipation1;
-    bool bParticipation2;
-    bool bParticipation3;
+    uint8_t bParticipation;
 
     if (IS_MR_CHANNEL(channel)) {
-        bParticipation1 = att.scanlist1;
-        bParticipation2 = att.scanlist2;
-        bParticipation3 = att.scanlist3;
+        bParticipation = att->scanlist;
     }
     else {
         band = channel - FREQ_CHANNEL_FIRST;
-        bParticipation1 = true;
-        bParticipation2 = true;
-        bParticipation3 = true;
+        bParticipation = MR_CHANNELS_LIST + 1;
     }
 
     pVfo->Band                    = band;
-    pVfo->SCANLIST1_PARTICIPATION = bParticipation1;
-    pVfo->SCANLIST2_PARTICIPATION = bParticipation2;
-    pVfo->SCANLIST3_PARTICIPATION = bParticipation3;
+    pVfo->SCANLIST_PARTICIPATION = bParticipation;
     pVfo->CHANNEL_SAVE            = channel;
 
     uint32_t base;
     if (IS_MR_CHANNEL(channel))
         base = channel * 16;
     else
-        base = 0x001000 + ((channel - FREQ_CHANNEL_FIRST) * 32) + (VFO * 16);
+        base = 0x009000 + ((channel - FREQ_CHANNEL_FIRST) * 32) + (VFO * 16);
 
     if (configure == VFO_CONFIGURE_RELOAD || IS_FREQ_CHANNEL(channel))
     {
@@ -424,7 +460,7 @@ void RADIO_ConfigureChannel(const unsigned int VFO, const unsigned int configure
             pConfig->Frequency = 43300000;
     }
 
-    pVfo->Compander = att.compander;
+    pVfo->Compander = att->compander;
 
     #ifdef ENABLE_FEAT_F4HWN_RESCUE_OPS
     if(gRemoveOffset)
@@ -513,7 +549,7 @@ void RADIO_ConfigureSquelchAndOutputPower(VFO_Info_t *pInfo)
 
     Band = FREQUENCY_GetBand(pInfo->pTX->Frequency);
 
-    // my eeprom calibration data 
+    // my eeprom calibration data on UV-K5 (V1)
     //
     // 1ED0 32 32 32 64 64 64 8c 8c 8c ff ff ff ff ff ff ff  50 MHz
     // 1EE0 32 32 32 64 64 64 8c 8c 8c ff ff ff ff ff ff ff 108 MHz
@@ -522,6 +558,15 @@ void RADIO_ConfigureSquelchAndOutputPower(VFO_Info_t *pInfo)
     // 1F10 5f 5f 5f 69 69 69 87 87 87 ff ff ff ff ff ff ff 350 MHz
     // 1F20 5f 5f 5f 69 69 69 87 87 87 ff ff ff ff ff ff ff 400 MHz
     // 1F30 32 32 32 64 64 64 8c 8c 8c ff ff ff ff ff ff ff 470 MHz
+
+    // my eeprom calibration data on UV-K1
+    //      32 32 32 64 64 64 8c 8c 8c ff ff ff ff ff ff ff  50 MHz
+    //      32 32 32 64 64 64 8c 8c 8c ff ff ff ff ff ff ff 108 MHz
+    //      4b 4b 4b 78 78 78 96 96 96 ff ff ff ff ff ff ff 137 MHz
+    //      32 32 32 64 64 64 8c 8c 8c ff ff ff ff ff ff ff 174 MHz
+    //      5a 5a 5a 64 64 64 a0 a0 a0 ff ff ff ff ff ff ff 350 MHz
+    //      4b 4b 4b 78 78 78 96 96 96 ff ff ff ff ff ff ff 400 MHz
+    //      32 32 32 64 64 64 94 8c 8c ff ff ff ff ff ff ff 470 MHz
 
     uint8_t Txp[3];
     uint8_t Op = 0; // Low eeprom calibration data 
@@ -602,7 +647,17 @@ void RADIO_ConfigureSquelchAndOutputPower(VFO_Info_t *pInfo)
     }
     */
 
-    static const uint8_t dividers[6] = { 25, 19, 13, 10, 7, 4};
+    //static const uint8_t dividers[6] = { 25, 19, 13, 10, 7, 4}; // For UV-K5 V1
+
+    static const uint8_t dividers_band2[6] = { 20, 15, 10, 8, 6, 4 };
+    static const uint8_t dividers_band5[6] = { 25, 19, 13, 9, 6, 4 }; // Need to improve measure...
+
+    const uint8_t *dividers;
+
+    if (Band == 2)  // VHF
+        dividers = dividers_band2;
+    else // UHF
+        dividers = dividers_band5;
 
     for (uint8_t p = 0; p < 3; p++)
     {
@@ -612,7 +667,8 @@ void RADIO_ConfigureSquelchAndOutputPower(VFO_Info_t *pInfo)
         }
         else // case 6
         {
-            Txp[p] += 30;
+            // Txp[p] += 30; // For UV-K5 V1
+            Txp[p] += 24;
         }
     }
 #else
@@ -868,7 +924,8 @@ void RADIO_SetupRegisters(bool switchToForeground)
     BK4819_EnableDTMF();
     InterruptMask |= BK4819_REG_3F_DTMF_5TONE_FOUND;
 
-    RADIO_SetupAGC(gRxVfo->Modulation == MODULATION_AM, false);
+    //RADIO_SetupAGC(gRxVfo->Modulation == MODULATION_AM, false);
+    RADIO_SetupAGC(false, false);
 
     // enable/disable BK4819 selected interrupts
     BK4819_WriteRegister(BK4819_REG_3F, InterruptMask);
@@ -1037,6 +1094,14 @@ void RADIO_SetModulation(ModulationMode_t modulation)
         BK4819_WriteRegister(0x2a,0x7400);
         BK4819_WriteRegister(0x2b,0);
         BK4819_WriteRegister(0x2f,0x9890);
+        //BK4819_WriteRegister(0x54, 0x9009);
+        //BK4819_WriteRegister(0x55, 0x31a9);
+        #ifdef ENABLE_FEAT_F4HWN_AUDIO
+            AUDIO_ApplyProfile(gSetting_set_audio);
+        #else
+            BK4819_WriteRegister(0x54, 0x9009);
+            BK4819_WriteRegister(0x55, 0x31a9);
+        #endif
     }
     else
     {
@@ -1046,6 +1111,12 @@ void RADIO_SetModulation(ModulationMode_t modulation)
         BK4819_WriteRegister(0x2a,0x7434);
         BK4819_WriteRegister(0x2b,0x300);
         BK4819_WriteRegister(0x2f,0x9990);
+        //BK4819_WriteRegister(0x54, 0x9775);
+        //BK4819_WriteRegister(0x55, 0x32c6);
+
+        BK4819_WriteRegister(0x54, 0x8846);
+        BK4819_WriteRegister(0x55, 0x38C0);
+
         BK4819_SetFilterBandwidth(BK4819_FILTER_BW_AM, true);
     }
     
@@ -1053,7 +1124,8 @@ void RADIO_SetModulation(ModulationMode_t modulation)
     BK4819_WriteRegister(BK4819_REG_3D, modulation == MODULATION_USB ? 0 : 0x2AAB);
     BK4819_SetRegValue(afcDisableRegSpec, modulation != MODULATION_FM);
 
-    RADIO_SetupAGC(modulation == MODULATION_AM, false);
+    //RADIO_SetupAGC(modulation == MODULATION_AM, false);
+    RADIO_SetupAGC(false, false);
 }
 
 void RADIO_SetupAGC(bool listeningAM, bool disable)

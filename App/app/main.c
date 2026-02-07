@@ -63,20 +63,23 @@ static void toggle_chan_scanlist(void)
         return;
     }
     
+    ChannelAttributes_t *att = MR_GetChannelAttributes(gTxVfo->CHANNEL_SAVE);
+
     // Remove exclude
-    if(gMR_ChannelExclude[gTxVfo->CHANNEL_SAVE] == true)
+    if(att->exclude == true)
     {
-        gMR_ChannelExclude[gTxVfo->CHANNEL_SAVE] = false;
+        att->exclude = false;
         return;
     }
 
-    uint8_t scanTmp = gTxVfo->SCANLIST1_PARTICIPATION | (gTxVfo->SCANLIST2_PARTICIPATION << 1) | (gTxVfo->SCANLIST3_PARTICIPATION << 2);
+    uint8_t scanlist = gTxVfo->SCANLIST_PARTICIPATION;
 
-    scanTmp = (scanTmp++ < 7) ? scanTmp: 0;
+    scanlist++;
 
-    gTxVfo->SCANLIST1_PARTICIPATION = (scanTmp >> 0) & 0x01;
-    gTxVfo->SCANLIST2_PARTICIPATION = (scanTmp >> 1) & 0x01;
-    gTxVfo->SCANLIST3_PARTICIPATION = (scanTmp >> 2) & 0x01;
+    if (scanlist > MR_CHANNELS_LIST + 1)
+        scanlist = 0;
+
+    gTxVfo->SCANLIST_PARTICIPATION = scanlist;
 
     SETTINGS_UpdateChannel(gTxVfo->CHANNEL_SAVE, gTxVfo, true, true, true);
 
@@ -348,8 +351,8 @@ void channelMove(uint16_t Channel)
         gAnotherVoiceID        = (VOICE_ID_t)Key;
     #endif
 
-    gEeprom.MrChannel[Vfo]     = (uint8_t)Channel;
-    gEeprom.ScreenChannel[Vfo] = (uint8_t)Channel;
+    gEeprom.MrChannel[Vfo]     = (uint16_t)Channel;
+    gEeprom.ScreenChannel[Vfo] = (uint16_t)Channel;
     //gRequestSaveVFO            = true;
     gVfoConfigureMode          = VFO_CONFIGURE_RELOAD;
 
@@ -386,11 +389,11 @@ void channelMoveSwitch(void) {
             Channel = (Channel * 10) + gInputBox[i];
         }
 
-        if ((Channel == 0) && (gInputBoxIndex != 3)) {
+        if ((Channel == 0) && (gInputBoxIndex != 4)) {
             return;
         }
 
-        if (gInputBoxIndex == 3) {
+        if (gInputBoxIndex == 4) {
             gInputBoxIndex = 0;
             gKeyInputCountdown = 1;
 
@@ -401,6 +404,7 @@ void channelMoveSwitch(void) {
         }
 
         channelMove(Channel - 1);
+        SETTINGS_SaveVfoIndices();
     }
 }
 
@@ -432,8 +436,15 @@ static void MAIN_Key_DIGITS(KEY_Code_t Key, bool bKeyPressed, bool bKeyHeld)
     if (!gWasFKeyPressed) { // F-key wasn't pressed
 
         if (gScanStateDir != SCAN_OFF){
+            /*
             switch(Key) {
-                case KEY_0...KEY_5:
+                case KEY_0:
+                    gEeprom.SCAN_LIST_DEFAULT = MR_CHANNELS_LIST + 1;
+                    #ifdef ENABLE_FEAT_F4HWN_RESUME_STATE
+                        SETTINGS_WriteCurrentState();
+                    #endif
+                    break;
+                case KEY_1...KEY_9:
                     gEeprom.SCAN_LIST_DEFAULT = Key;
                     #ifdef ENABLE_FEAT_F4HWN_RESUME_STATE
                         SETTINGS_WriteCurrentState();
@@ -442,6 +453,54 @@ static void MAIN_Key_DIGITS(KEY_Code_t Key, bool bKeyPressed, bool bKeyHeld)
                 default:
                     break;
             }
+            return;
+            */
+
+            INPUTBOX_Append(Key);
+
+            /* Wait until exactly two digits are entered */
+            if (gInputBoxIndex < 2)
+                return;
+
+            /* Two digits entered */
+            gInputBoxIndex = 0;
+
+            uint8_t value = (gInputBox[0] * 10) + gInputBox[1];
+
+            /* 00 = ALL scan lists */
+            if (value == 0)
+            {
+                gEeprom.SCAN_LIST_DEFAULT = MR_CHANNELS_LIST + 1;
+            #ifdef ENABLE_FEAT_F4HWN_RESUME_STATE
+                SETTINGS_WriteCurrentState();
+            #endif
+                return;
+            }
+
+            /* 01 .. MR_CHANNELS_LIST */
+            if (value <= MR_CHANNELS_LIST)
+            {
+                if (RADIO_CheckValidList(value))
+                {
+                    /* Requested scan list is valid */
+                    gEeprom.SCAN_LIST_DEFAULT = value;
+                }
+                else
+                {
+                    /* Requested scan list is empty or invalid:
+                       jump to the next valid scan list */
+                    gEeprom.SCAN_LIST_DEFAULT = value;
+                    RADIO_NextValidList();
+                }
+
+            #ifdef ENABLE_FEAT_F4HWN_RESUME_STATE
+                SETTINGS_WriteCurrentState();
+            #endif
+            }
+
+            gInputBoxIndex = 0;
+
+            gBeepToPlay = BEEP_500HZ_60MS_DOUBLE_BEEP_OPTIONAL;
             return;
         }
 
@@ -673,12 +732,15 @@ static void MAIN_Key_MENU(bool bKeyPressed, bool bKeyHeld)
         if (bKeyPressed) { // long press MENU key
 
             #ifdef ENABLE_FEAT_F4HWN
-            // Exclude work with list 1, 2, 3 or all list
+            // Exclude channel
             if(gScanStateDir != SCAN_OFF)
             {
                 if(FUNCTION_IsRx() || gScanPauseDelayIn_10ms > 9)
                 {
-                    gMR_ChannelExclude[gTxVfo->CHANNEL_SAVE] = true;
+                    ChannelAttributes_t *att = MR_GetChannelAttributes(lastFoundFrqOrChan);
+                    att->exclude = true;
+
+                    MR_SaveChannelAttributesToFlash(lastFoundFrqOrChan, att);
 
                     gVfoConfigureMode = VFO_CONFIGURE;
                     gFlagResetVfos    = true;
@@ -855,7 +917,7 @@ static void MAIN_Key_UP_DOWN(bool bKeyPressed, bool bKeyHeld, int8_t Direction)
     gPowerHigh = false;
 #endif
 
-    uint8_t Channel = gEeprom.ScreenChannel[gEeprom.TX_VFO];
+    uint16_t Channel = gEeprom.ScreenChannel[gEeprom.TX_VFO];
 
     if (bKeyHeld || !bKeyPressed) { // key held or released
         if (gInputBoxIndex > 0)
@@ -885,7 +947,7 @@ static void MAIN_Key_UP_DOWN(bool bKeyPressed, bool bKeyHeld, int8_t Direction)
         if (!IS_NOAA_CHANNEL(Channel))
 #endif
         {
-            uint8_t Next;
+            uint16_t Next;
             if (IS_FREQ_CHANNEL(Channel)) { // step/down in frequency
                 const uint32_t frequency = APP_SetFrequencyByStep(gTxVfo, Direction);
 
@@ -901,7 +963,7 @@ static void MAIN_Key_UP_DOWN(bool bKeyPressed, bool bKeyHeld, int8_t Direction)
             }
 
             Next = RADIO_FindNextChannel(Channel + Direction, Direction, false, 0);
-            if (Next == 0xFF)
+            if (Next == 0xFFFF)
                 return;
             if (Channel == Next)
                 return;
@@ -977,18 +1039,16 @@ void MAIN_ProcessKeys(KEY_Code_t Key, bool bKeyPressed, bool bKeyHeld)
             MAIN_Key_MENU(bKeyPressed, bKeyHeld);
             break;
         case KEY_UP:
-            #ifdef ENABLE_NAVIG_LEFT_RIGHT
+            if(gEeprom.SET_NAV == 0)
                 MAIN_Key_UP_DOWN(bKeyPressed, bKeyHeld, -1);            
-            #else
+            else
                 MAIN_Key_UP_DOWN(bKeyPressed, bKeyHeld, 1);
-            #endif
             break;
         case KEY_DOWN:
-            #ifdef ENABLE_NAVIG_LEFT_RIGHT
+            if(gEeprom.SET_NAV == 0)
                 MAIN_Key_UP_DOWN(bKeyPressed, bKeyHeld, 1);
-            #else
+            else
                 MAIN_Key_UP_DOWN(bKeyPressed, bKeyHeld, -1);
-            #endif
             break;
         case KEY_EXIT:
             MAIN_Key_EXIT(bKeyPressed, bKeyHeld);

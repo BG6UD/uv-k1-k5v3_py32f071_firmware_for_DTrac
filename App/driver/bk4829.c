@@ -19,6 +19,7 @@
 #include <stdio.h>
 
 #include "settings.h"
+#include "misc.h"
 
 #include "audio.h"
 
@@ -26,11 +27,6 @@
 #include "driver/gpio.h"
 #include "driver/system.h"
 #include "driver/systick.h"
-
-
-#ifndef ARRAY_SIZE
-    #define ARRAY_SIZE(x) (sizeof(x) / sizeof(x[0]))
-#endif
 
 #define PIN_CSN GPIO_MAKE_PIN(GPIOF, LL_GPIO_PIN_9)
 #define PIN_SCL GPIO_MAKE_PIN(GPIOB, LL_GPIO_PIN_8)
@@ -177,7 +173,7 @@ void BK4819_Init(void)
 
     BK4819_WriteRegister(0x73, 0x4691);
     BK4819_WriteRegister(0x77, 0x88EF);
-    BK4819_WriteRegister(BK4819_REG_19, 0x104E);
+    BK4819_WriteRegister(BK4819_REG_19, 0x1041);
     BK4819_WriteRegister(BK4819_REG_28, 0x0B40);
     BK4819_WriteRegister(BK4819_REG_29, 0xAA00);
     BK4819_WriteRegister(0x2A, 0x6600);

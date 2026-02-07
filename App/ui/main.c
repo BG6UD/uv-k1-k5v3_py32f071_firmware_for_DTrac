@@ -37,6 +37,7 @@
 #include "ui/main.h"
 #include "ui/ui.h"
 #include "audio.h"
+#include "menu.h"
 
 #ifdef ENABLE_FEAT_F4HWN
     #include "driver/system.h"
@@ -272,10 +273,13 @@ void DisplayRSSIBar(const bool now)
     //sprintf(String, "%d", RxBlink);
     //UI_PrintStringSmallBold(String, 80, 0, RxLine);
 
+    /*
     if(RxLine >= 0 && center_line != CENTER_LINE_IN_USE)
     {
         if (RxBlink == 0 || RxBlink == 1) {
             UI_PrintStringSmallBold("RX", 8, 0, RxLine);
+            //GUI_DisplaySmallest("RX", 10, (RxLine * 8) + 1, false, true);
+
             if (RxBlink == 1) RxBlink = 2;
         } else {
             for (uint8_t i = 8; i < 24; i++)
@@ -286,6 +290,7 @@ void DisplayRSSIBar(const bool now)
         }
         ST7565_BlitLine(RxLine);
     }
+    */
 #else
     const unsigned int line = 3;
 #endif
@@ -736,12 +741,12 @@ void UI_DisplayMain(void)
 
         uint32_t frequency = gEeprom.VfoInfo[vfo_num].pRX->Frequency;
 
-        if(TX_freq_check(frequency) != 0 && gEeprom.VfoInfo[vfo_num].TX_LOCK == true)
+        if(TX_freq_check(frequency) != 0 && gEeprom.VfoInfo[vfo_num].TX_LOCK == true && !FUNCTION_IsRx())
         {
             if(isMainOnly())
-                memcpy(p_line0 + 14, BITMAP_VFO_Lock, sizeof(BITMAP_VFO_Lock));
+                memcpy(p_line0 + 25, BITMAP_VFO_Lock, sizeof(BITMAP_VFO_Lock));
             else
-                memcpy(p_line0 + 24, BITMAP_VFO_Lock, sizeof(BITMAP_VFO_Lock));
+                memcpy(p_line0 + 25, BITMAP_VFO_Lock, sizeof(BITMAP_VFO_Lock));
         }
 
         if (gCurrentFunction == FUNCTION_TRANSMIT)
@@ -756,7 +761,9 @@ void UI_DisplayMain(void)
                 if (activeTxVFO == vfo_num)
                 {   // show the TX symbol
                     mode = VFO_MODE_TX;
-                    UI_PrintStringSmallBold("TX", 8, 0, line);
+                    //UI_PrintStringSmallBold("TX", 8, 0, line);
+                    GUI_DisplaySmallest("TX", 10, line == 0 ? 1 : 33, false, true);
+
                 }
             }
         }
@@ -777,6 +784,21 @@ void UI_DisplayMain(void)
                 else
                 {
                     RxBlink = 0;
+                }
+
+                if (RxBlink == 0 || RxBlink == 1) {
+                    if(gRxVfo->Modulation == MODULATION_AM)
+                        GUI_DisplaySmallest("AIR", 10, RxLine == 0 ? 1 : 33, false, true);
+                    else {
+                        #ifdef ENABLE_FEAT_F4HWN_AUDIO
+                            strcpy(String, gSubMenu_SET_AUD[gSetting_set_audio]);
+                        #else
+                            strcpy(String, "RX");
+                        #endif
+                        GUI_DisplaySmallest(String, 10, RxLine == 0 ? 1 : 33, false, true);
+                    }
+
+                    //UI_PrintStringSmallBold("RX", 8, 0, RxLine);
                 }
 #else
                 UI_PrintStringSmallBold("RX", 8, 0, line);
@@ -799,13 +821,13 @@ void UI_DisplayMain(void)
 
         if (IS_MR_CHANNEL(gEeprom.ScreenChannel[vfo_num]))
         {   // channel mode
-            const unsigned int x = 2;
+            const unsigned int x = 3;
             const bool inputting = gInputBoxIndex != 0 && gEeprom.TX_VFO == vfo_num;
-            if (!inputting)
-                sprintf(String, "M%u", gEeprom.ScreenChannel[vfo_num] + 1);
+            if (!inputting || gScanStateDir != SCAN_OFF)
+                sprintf(String, "%04u", gEeprom.ScreenChannel[vfo_num] + 1);
             else
-                sprintf(String, "M%.3s", INPUTBOX_GetAscii());  // show the input text
-            UI_PrintStringSmallNormal(String, x, 0, line + 1);
+                sprintf(String, "%.4s", INPUTBOX_GetAscii());  // show the input text
+            UI_PrintStringSmallNormalInverse(String, x, 0, line + 1);
         }
         else if (IS_FREQ_CHANNEL(gEeprom.ScreenChannel[vfo_num]))
         {   // frequency mode
@@ -843,7 +865,7 @@ void UI_DisplayMain(void)
         if (state != VFO_STATE_NORMAL)
         {
             if (state < ARRAY_SIZE(VfoStateStr))
-                UI_PrintString(VfoStateStr[state], 31, 0, line, 8);
+                UI_PrintString(VfoStateStr[state], 35, 0, line, 8);
         }
         else if (gInputBoxIndex > 0 && IS_FREQ_CHANNEL(gEeprom.ScreenChannel[vfo_num]) && gEeprom.TX_VFO == vfo_num)
         {   // user entering a frequency
@@ -881,43 +903,48 @@ void UI_DisplayMain(void)
                 #ifdef ENABLE_FEAT_F4HWN_RESCUE_OPS
                     if(gEeprom.MENU_LOCK == false) {
                 #endif
-                uint8_t countList = 0;
-                uint8_t shiftList = 0;
 
-                if(gMR_ChannelExclude[gEeprom.ScreenChannel[vfo_num]] == false)
+                const ChannelAttributes_t* att = MR_GetChannelAttributes(gEeprom.ScreenChannel[vfo_num]);
+
+
+                if(att->exclude == false)
                 {
                     // show the scan list assigment symbols
-                    const ChannelAttributes_t att = gMR_ChannelAttributes[gEeprom.ScreenChannel[vfo_num]];
+                    const ChannelAttributes_t* att = MR_GetChannelAttributes(gEeprom.ScreenChannel[vfo_num]);
 
-                    countList = att.scanlist1 + att.scanlist2 + att.scanlist3;
-
-                    if(countList == 0)
-                    {
-                        memcpy(p_line0 + 127 - (1 * 6), BITMAP_ScanList0, sizeof(BITMAP_ScanList0));
+                    uint8_t countList = att->scanlist;
+                    if(countList > MR_CHANNELS_LIST + 1) {
+                        countList = 0;
                     }
-                    else
-                    {
-                        shiftList = countList;
 
-                        if (att.scanlist1)
-                        {
-                            memcpy(p_line0 + 127 - (shiftList * 6), BITMAP_ScanList1, sizeof(BITMAP_ScanList1));
-                            shiftList--;
-                        }
-                        if (att.scanlist2)
-                        {
-                            memcpy(p_line0 + 127 - (shiftList * 6), BITMAP_ScanList2, sizeof(BITMAP_ScanList2));
-                            shiftList--;
-                        }
-                        if (att.scanlist3)
-                        {
-                            memcpy(p_line0 + 127 - (shiftList * 6), BITMAP_ScanList3, sizeof(BITMAP_ScanList3));
-                        }
+                    const char *displayStr = (countList == MR_CHANNELS_LIST + 1) ? "ALL" : 
+                                             (countList == 0) ? "OFF" : String;
+                    uint8_t xStart = (countList > 0 && countList != MR_CHANNELS_LIST + 1) ? 117 : 113;
+                    uint8_t xDisplay = (countList > 0 && countList != MR_CHANNELS_LIST + 1) ? 119 : 115;
+
+                    if(countList > 0 && countList != MR_CHANNELS_LIST + 1) {
+                        sprintf(String, "%02d", countList);
                     }
+
+                    GUI_DisplaySmallest(displayStr, xDisplay, line == 0 ? 2 : 34, false, true);
+
+                    for (uint8_t x = xStart; x < 128; x++) {
+                        gFrameBuffer[line][x] ^= 0xFE;
+                    }
+
                 }
                 else
                 {
-                    memcpy(p_line0 + 127 - (1 * 6), BITMAP_ScanListE, sizeof(BITMAP_ScanListE));
+                    const char *displayStr = "EX";
+
+                    uint8_t xStart = 117;
+                    uint8_t xDisplay = 119;
+                    
+                    GUI_DisplaySmallest(displayStr, xDisplay, line == 0 ? 2 : 34, false, true);
+
+                    for (uint8_t x = xStart; x < 128; x++) {
+                        gFrameBuffer[line][x] ^= 0xFE;
+                    }
                 }
 
                 #ifdef ENABLE_FEAT_F4HWN_RESCUE_OPS
@@ -928,7 +955,7 @@ void UI_DisplayMain(void)
 
                 // compander symbol
 #ifndef ENABLE_BIG_FREQ
-                if (att.compander)
+                if (att->compander)
                     memcpy(p_line0 + 120 + LCD_WIDTH, BITMAP_compand, sizeof(BITMAP_compand));
 #else
                 // TODO:  // find somewhere else to put the symbol
@@ -957,7 +984,7 @@ void UI_DisplayMain(void)
 
                     case MDF_CHANNEL:   // show the channel number
                         sprintf(String, "CH-%03u", gEeprom.ScreenChannel[vfo_num] + 1);
-                        UI_PrintString(String, 32, 0, line, 8);
+                        UI_PrintString(String, 36, 0, line, 8);
                         break;
 
                     case MDF_NAME:      // show the channel name
@@ -970,13 +997,15 @@ void UI_DisplayMain(void)
                         }
 
                         if (gEeprom.CHANNEL_DISPLAY_MODE == MDF_NAME) {
-                            UI_PrintString(String, 32, 0, line, 8);
+                            String[9] = 0;
+                            UI_PrintString(String, 36, 0, line, 8);
                         }
                         else {
 #ifdef ENABLE_FEAT_F4HWN
                             if (isMainOnly())
                             {
-                                UI_PrintString(String, 32, 0, line, 8);
+                                String[9] = 0;
+                                UI_PrintString(String, 36, 0, line, 8);
                             }
                             else
                             {
@@ -1043,8 +1072,8 @@ void UI_DisplayMain(void)
                 }
 
                 // show the channel symbols
-                const ChannelAttributes_t att = gMR_ChannelAttributes[gEeprom.ScreenChannel[vfo_num]];
-                if (att.compander)
+                const ChannelAttributes_t* att = MR_GetChannelAttributes(gEeprom.ScreenChannel[vfo_num]);
+                if (att->compander)
 #ifdef ENABLE_BIG_FREQ
                     memcpy(p_line0 + 120, BITMAP_compand, sizeof(BITMAP_compand));
 #else

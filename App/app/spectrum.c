@@ -103,8 +103,8 @@ RegisterSpec registerSpecs[] = {
     {},
     {"LNAs", BK4819_REG_13, 8, 0b11, 1},
     {"LNA", BK4819_REG_13, 5, 0b111, 1},
-    {"VGA", BK4819_REG_13, 0, 0b111, 1},
-    {"BPF", BK4819_REG_3D, 0, 0xFFFF, 0x2aaa},
+    {"PGA", BK4819_REG_13, 0, 0b111, 1},
+    //{"BPF", BK4819_REG_3D, 0, 0xFFFF, 0x2aaa},
     // {"MIX", 0x13, 3, 0b11, 1}, // TODO: hidden
 };
 
@@ -112,7 +112,7 @@ RegisterSpec registerSpecs[] = {
 const int8_t LNAsOptions[] = {-19, -16, -11, 0};
 const int8_t LNAOptions[] = {-24, -19, -14, -9, -6, -4, -2, 0};
 const int8_t VGAOptions[] = {-33, -27, -21, -15, -9, -6, -3, 0};
-const char *BPFOptions[] = {"8.46", "7.25", "6.35", "5.64", "5.08", "4.62", "4.23"};
+//const char *BPFOptions[] = {"8.46", "7.25", "6.35", "5.64", "5.08", "4.62", "4.23"};
 #endif
 
 uint16_t statuslineUpdateTimer = 0;
@@ -121,7 +121,7 @@ uint16_t statuslineUpdateTimer = 0;
 static void LoadSettings()
 {
     uint8_t Data[8] = {0};
-    PY25Q16_ReadBuffer(0x00c000, Data, sizeof(Data));
+    PY25Q16_ReadBuffer(0x00A158, Data, sizeof(Data));
 
     settings.scanStepIndex = ((Data[3] & 0xF0) >> 4);
 
@@ -148,11 +148,11 @@ static void LoadSettings()
 static void SaveSettings()
 {
     uint8_t Data[8] = {0};
-    PY25Q16_ReadBuffer(0x00c000, Data, sizeof(Data));
+    PY25Q16_ReadBuffer(0x00A158, Data, sizeof(Data));
 
     Data[3] = (settings.scanStepIndex << 4) | (settings.stepsCount << 2) | settings.listenBw;
 
-    PY25Q16_WriteBuffer(0x00c000, Data, sizeof(Data), true);
+    PY25Q16_WriteBuffer(0x00A158, Data, sizeof(Data), false);
 }
 #endif
 
@@ -183,8 +183,10 @@ static uint16_t GetRegMenuValue(uint8_t st)
 
 void LockAGC()
 {
-    RADIO_SetupAGC(settings.modulationType == MODULATION_AM, lockAGC);
-    lockAGC = true;
+    //RADIO_SetupAGC(settings.modulationType == MODULATION_AM, lockAGC);
+    RADIO_SetupAGC(false, lockAGC);
+    //lockAGC = true;
+    lockAGC = false;
 }
 
 static void SetRegMenuValue(uint8_t st, bool add)
@@ -504,7 +506,9 @@ static void ToggleRX(bool on)
     #endif
     isListening = on;
 
-    RADIO_SetupAGC(settings.modulationType == MODULATION_AM, lockAGC);
+    //RADIO_SetupAGC(settings.modulationType == MODULATION_AM, lockAGC);
+    RADIO_SetupAGC(false, lockAGC);
+
     BK4819_ToggleGpioOut(BK4819_GPIO6_PIN2_GREEN, on);
 
     ToggleAudio(on);
@@ -950,16 +954,16 @@ uint8_t Rssi2Y(uint16_t rssi)
                 // Total width units = (bars - 1) full bars + 2 half bars = bars
                 // First bar: half width, middle bars: full width, last bar: half width
                 // Scale: 128 pixels / (bars - 1) = pixels per full bar
-                uint16_t fullWidth = 128 * 2 / (bars - 1);  // x2 for precision
+                uint16_t fullWidth = (128 << 8) / (bars - 1);  // x256 for precision
                 
                 if (i == 0)
                 {
-                    x = fullWidth / 4;  // half of half (because fullWidth is x2)
+                    x = fullWidth / (2 << 8);  // half of /256 (because fullWidth is x256)
                 }
                 else
                 {
                     // Position = half + (i-1) full bars + current bar
-                    x = fullWidth / 4 + (uint16_t)i * fullWidth / 2;
+                    x = fullWidth / (2 << 8) + (uint16_t)i * fullWidth / (1 << 8);
                     if (i == bars - 1) x = 128;  // Last bar ends at screen edge
                 }
             }
@@ -1181,6 +1185,8 @@ static void DrawArrow(uint8_t x)
 
 static void OnKeyDown(uint8_t key)
 {
+    bool nav = (gEeprom.SET_NAV != 0);
+
     switch (key)
     {
     case KEY_3:
@@ -1203,22 +1209,20 @@ static void OnKeyDown(uint8_t key)
         break;
     case KEY_UP:
 #ifdef ENABLE_SCAN_RANGES
-        if (!gScanRangeStart)
+        if (!gScanRangeStart) {
 #endif
-#ifdef ENABLE_NAVIG_LEFT_RIGHT
-            UpdateCurrentFreq(false);
-#else
-            UpdateCurrentFreq(true);
+        UpdateCurrentFreq(nav);
+#ifdef ENABLE_SCAN_RANGES
+        }
 #endif
         break;
     case KEY_DOWN:
 #ifdef ENABLE_SCAN_RANGES
-        if (!gScanRangeStart)
+        if (!gScanRangeStart) {
 #endif
-#ifdef ENABLE_NAVIG_LEFT_RIGHT
-            UpdateCurrentFreq(true);
-#else
-            UpdateCurrentFreq(false);
+        UpdateCurrentFreq(!nav);
+#ifdef ENABLE_SCAN_RANGES
+        }
 #endif
         break;
     case KEY_SIDE1:
@@ -1326,6 +1330,8 @@ static void OnKeyDownFreqInput(uint8_t key)
 
 void OnKeyDownStill(KEY_Code_t key)
 {
+    bool nav = (gEeprom.SET_NAV != 0);
+
     switch (key)
     {
     case KEY_3:
@@ -1335,37 +1341,18 @@ void OnKeyDownStill(KEY_Code_t key)
         UpdateDBMax(false);
         break;
     case KEY_UP:
-        if (menuState)
-
-#ifdef ENABLE_NAVIG_LEFT_RIGHT
-        {
-            SetRegMenuValue(menuState, false);
+        if (menuState) {
+            SetRegMenuValue(menuState, nav);
             break;
         }
-        UpdateCurrentFreqStill(false);
-#else
-        {
-            SetRegMenuValue(menuState, true);
-            break;
-        }
-        UpdateCurrentFreqStill(true);
-#endif
+        UpdateCurrentFreqStill(nav);
         break;
     case KEY_DOWN:
-        if (menuState)
-#ifdef ENABLE_NAVIG_LEFT_RIGHT
-        {
-            SetRegMenuValue(menuState, true);
+        if (menuState) {
+            SetRegMenuValue(menuState, !nav);
             break;
         }
-        UpdateCurrentFreqStill(true);
-#else
-        {
-            SetRegMenuValue(menuState, false);
-            break;
-        }
-        UpdateCurrentFreqStill(false);
-#endif
+        UpdateCurrentFreqStill(!nav);
         break;
     case KEY_STAR:
         UpdateRssiTriggerLevel(true);
@@ -1432,7 +1419,7 @@ static void RenderStatus()
 static void RenderSpectrum()
 {
     DrawTicks();
-    DrawArrow(128u * peak.i / GetStepsCount());
+    DrawArrow(128u * peak.i / (GetStepsCount() - 1));
     DrawSpectrum();
     DrawRssiTriggerLevel();
     DrawF(peak.f);
@@ -1484,9 +1471,9 @@ static void RenderStill()
     uint8_t offset = PAD_LEFT;
     uint8_t row = 4;
 
-    for (int i = 0, idx = 1; idx <= 4; ++i, ++idx)
+    for (int i = 0, idx = 1; idx <= 3; ++i, ++idx)
     {
-        if (idx == 5)
+        if (idx == 4)
         {
             row += 2;
             i = 0;
@@ -1517,10 +1504,12 @@ static void RenderStill()
         {
             sprintf(String, "%ddB", VGAOptions[GetRegMenuValue(idx)]);
         }
+        /*
         else if(idx == 4)
         {
             sprintf(String, "%skHz", BPFOptions[(GetRegMenuValue(idx) / 0x2aaa)]);
         }
+        */
 #else
         sprintf(String, "%u", GetRegMenuValue(idx));
 #endif
@@ -1611,7 +1600,7 @@ static void UpdateScan()
 {
     Scan();
 
-    if (scanInfo.i < scanInfo.measurementsCount)
+    if (scanInfo.i + 1 < scanInfo.measurementsCount)
     {
         NextScanStep();
         return;

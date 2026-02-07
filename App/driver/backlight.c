@@ -31,7 +31,7 @@
     #include "misc.h"
 #endif
 
-#define PWM_FREQ 240
+#define PWM_FREQ 320
 #define DUTY_CYCLE_LEVELS 64
 
 #define DUTY_CYCLE_ON_VALUE GPIO_PIN_MASK(GPIO_PIN_BACKLIGHT)
@@ -47,7 +47,19 @@ uint16_t gBacklightCountdown_500ms = 0;
 bool backlightOn;
 
 #ifdef ENABLE_FEAT_F4HWN
-    const uint8_t value[] = {0, 3, 6, 9, 15, 24, 38, 62, 100, 159, 255};
+    const uint8_t value[] = {
+        0,    // 0 off
+        8,    // 1 visible in the dark
+        14,   // 2
+        22,   // 3
+        32,   // 4
+        48,   // 5
+        72,   // 6
+        104,  // 7
+        150,  // 8
+        200,  // 9
+        255   // 10 max
+    };
 #endif
 
 #ifdef ENABLE_FEAT_F4HWN_SLEEP
@@ -79,7 +91,7 @@ void BACKLIGHT_InitHardware()
                               | LL_DMA_MEMORY_INCREMENT     //
                               | LL_DMA_PDATAALIGN_WORD      //
                               | LL_DMA_MDATAALIGN_WORD      //
-                              | LL_DMA_PRIORITY_LOW         //
+                              | LL_DMA_PRIORITY_HIGH        //
     );
 
     LL_DMA_SetMemoryAddress(DMA1, DMA_CHANNEL, (uint32_t)dutyCycle);

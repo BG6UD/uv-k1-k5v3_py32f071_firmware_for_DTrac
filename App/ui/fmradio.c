@@ -59,7 +59,7 @@ void UI_DisplayFM(void)
             pPrintStr = String;
         } else {
             pPrintStr = "VFO";
-            for (unsigned int i = 0; i < 20; i++) {
+            for (unsigned int i = 0; i < FM_CHANNELS_MAX; i++) {
                 if (gEeprom.FM_FrequencyPlaying == gFM_Channels[i]) {
                     sprintf(String, "VFO(CH%02u)", i + 1);
                     pPrintStr = String;
@@ -68,7 +68,7 @@ void UI_DisplayFM(void)
             }
         }
     } else if (gFM_AutoScan) {
-        sprintf(String, "A-SCAN(%u)", gFM_ChannelPosition + 1);
+        sprintf(String, "A-SCAN(%u)", gFM_ChannelPosition);
         pPrintStr = String;
     } else {
         pPrintStr = "M-SCAN";

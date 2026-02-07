@@ -63,17 +63,15 @@ const t_menu_item MenuList[] =
 #ifdef ENABLE_FEAT_F4HWN
     {"TXLock",      MENU_TX_LOCK       }, 
 #endif
-    {"ScAdd1",      MENU_S_ADD1        },
-    {"ScAdd2",      MENU_S_ADD2        },
-    {"ScAdd3",      MENU_S_ADD3        },
+    {"ChList",      MENU_LIST_CH       },
     {"ChSave",      MENU_MEM_CH        }, // was "MEM-CH"
     {"ChDele",      MENU_DEL_CH        }, // was "DEL-CH"
     {"ChName",      MENU_MEM_NAME      },
 
-    {"SList",       MENU_S_LIST        },
-    {"SList1",      MENU_SLIST1        },
-    {"SList2",      MENU_SLIST2        },
-    {"SList3",      MENU_SLIST3        },
+    {"ScList",       MENU_S_LIST       },
+    {"ScPri",        MENU_S_PRI        },
+    {"PriCh1",       MENU_S_PRI_CH_1   },
+    {"PriCh2",       MENU_S_PRI_CH_2   },
     {"ScnRev",      MENU_SC_REV        },
 #ifndef ENABLE_FEAT_F4HWN
     #ifdef ENABLE_NOAA
@@ -149,6 +147,9 @@ const t_menu_item MenuList[] =
     {"SetLck",      MENU_SET_LCK       },
     {"SetMet",      MENU_SET_MET       },
     {"SetGUI",      MENU_SET_GUI       },
+#ifdef ENABLE_FEAT_F4HWN_AUDIO    
+    {"SetRxA",      MENU_SET_AUD       },
+#endif
     {"SetTmr",      MENU_SET_TMR       },
 #ifdef ENABLE_FEAT_F4HWN_SLEEP
     {"SetOff",       MENU_SET_OFF      },
@@ -183,6 +184,7 @@ const t_menu_item MenuList[] =
 #endif
     {"BatCal",      MENU_BATCAL        }, // battery voltage calibration
     {"BatTyp",      MENU_BATTYP        }, // battery type 1600/2200mAh
+    {"SetNav",      MENU_SET_NAV       }, // set navigation (LEFT / RIGHT or UP / DOWN)
     {"Reset",       MENU_RESET         }, // might be better to move this to the hidden menu items ?
 
     {"",                              0xff               }  // end of list - DO NOT delete or move this this
@@ -349,6 +351,12 @@ const char gSubMenu_BATTYP[][12] =
     "2500mAh K1"
 };
 
+const char gSubMenu_SET_NAV[][17] =
+{
+    "LEFT\nRIGHT\nUV-K1",
+    "UP\nDOWN\nUV-K5(8)",
+};
+
 #ifndef ENABLE_FEAT_F4HWN
 const char gSubMenu_SCRAMBLER[][7] =
 {
@@ -403,6 +411,17 @@ const char gSubMenu_SCRAMBLER[][7] =
         "TINY",
         "CLASSIC"
     };
+
+    #ifdef ENABLE_FEAT_F4HWN_AUDIO
+        const char gSubMenu_SET_AUD[][6] =
+        {
+            "FLAT",
+            "CLEAN",
+            "MID",
+            "BOOST",
+            "MAX"
+        };
+    #endif
 
     #ifdef ENABLE_FEAT_F4HWN_NARROWER
         const char gSubMenu_SET_NFM[][9] =
@@ -461,9 +480,10 @@ const t_sidefunction gSubMenu_SIDEFUNCTIONS[] =
     {"MAIN ONLY",       ACTION_OPT_MAINONLY},
     {"PTT",             ACTION_OPT_PTT},
     {"WIDE\nNARROW",    ACTION_OPT_WN},
-    //#if !defined(ENABLE_SPECTRUM) || !defined(ENABLE_FMRADIO)
     {"MUTE",            ACTION_OPT_MUTE},
-    //#endif
+    #ifdef ENABLE_FEAT_F4HWN_AUDIO
+        {"RxA",            ACTION_OPT_RXA},
+    #endif
     #ifdef ENABLE_FEAT_F4HWN_RESCUE_OPS
         {"POWER\nHIGH",    ACTION_OPT_POWER_HIGH},
         {"REMOVE\nOFFSET",  ACTION_OPT_REMOVE_OFFSET},
@@ -787,9 +807,6 @@ void UI_DisplayMenu(void)
         #endif
         case MENU_BCL:
         case MENU_BEEP:
-        case MENU_S_ADD1:
-        case MENU_S_ADD2:
-        case MENU_S_ADD3:
         case MENU_STE:
         case MENU_D_ST:
 #ifdef ENABLE_DTMF_CALLING
@@ -810,6 +827,7 @@ void UI_DisplayMenu(void)
 #endif
 #ifdef ENABLE_FEAT_F4HWN
         case MENU_SET_TMR:
+        case MENU_S_PRI:
 #endif
             strcpy(String, gSubMenu_OFF_ON[gSubMenuSelection]);
             break;
@@ -817,23 +835,34 @@ void UI_DisplayMenu(void)
         case MENU_MEM_CH:
         case MENU_1_CALL:
         case MENU_DEL_CH:
+        case MENU_S_PRI_CH_1:
+        case MENU_S_PRI_CH_2:
         {
-            const bool valid = RADIO_CheckValidChannel(gSubMenuSelection, false, 0);
-
-            UI_GenerateChannelStringEx(String, valid, gSubMenuSelection);
-            UI_PrintString(String, menu_item_x1, menu_item_x2, 0, 8);
-
-            if (valid && !gAskForConfirmation)
-            {   // show the frequency so that the user knows the channels frequency
-                const uint32_t frequency = SETTINGS_FetchChannelFrequency(gSubMenuSelection);
-                sprintf(String, "%u.%05u", frequency / 100000, frequency % 100000);
-                UI_PrintString(String, menu_item_x1, menu_item_x2, 4, 8);
+            if(gSubMenuSelection == MR_CHANNELS_MAX)
+            {
+                UI_PrintString("None", menu_item_x1, menu_item_x2, 2, 8);
+                already_printed = true;
+                break;
             }
+            else
+            {
+                const bool valid = RADIO_CheckValidChannel(gSubMenuSelection, false, 0);
 
-            SETTINGS_FetchChannelName(String, gSubMenuSelection);
-            UI_PrintString(String[0] ? String : "--", menu_item_x1, menu_item_x2, 2, 8);
-            already_printed = true;
-            break;
+                UI_GenerateChannelStringEx(String, valid, gSubMenuSelection);
+                UI_PrintString(String, menu_item_x1, menu_item_x2, 0, 8);
+
+                if (valid && !gAskForConfirmation)
+                {   // show the frequency so that the user knows the channels frequency
+                    const uint32_t frequency = SETTINGS_FetchChannelFrequency(gSubMenuSelection);
+                    sprintf(String, "%u.%05u", frequency / 100000, frequency % 100000);
+                    UI_PrintString(String, menu_item_x1, menu_item_x2, 4, 8);
+                }
+
+                SETTINGS_FetchChannelName(String, gSubMenuSelection);
+                UI_PrintString(String[0] ? String : "--", menu_item_x1, menu_item_x2, 2, 8);
+                already_printed = true;
+                break;
+            }
         }
 
         case MENU_MEM_NAME:
@@ -935,15 +964,20 @@ void UI_DisplayMenu(void)
             sprintf(String, gSubMenuSelection == 0 ? gSubMenu_OFF_ON[0] : "%u*100ms", gSubMenuSelection);
             break;
 
-        case MENU_S_LIST:
-            if (gSubMenuSelection == 0)
-                strcpy(String, "LIST [0]\nNO LIST");
-            else if (gSubMenuSelection < 4)
-                sprintf(String, "LIST [%u]", gSubMenuSelection);
-            else if (gSubMenuSelection == 4)
-                strcpy(String, "LISTS\n[1, 2, 3]");
-            else if (gSubMenuSelection == 5)
+        case MENU_LIST_CH:
+            if (gSubMenuSelection == MR_CHANNELS_LIST + 1)
                 strcpy(String, "ALL");
+            else if (gSubMenuSelection == 0)
+                strcpy(String, "OFF");
+            else
+                sprintf(String, "%u", gSubMenuSelection);
+            break;
+
+        case MENU_S_LIST:
+            if (gSubMenuSelection == MR_CHANNELS_LIST + 1)
+                strcpy(String, "ALL");
+            else
+                sprintf(String, "%u", gSubMenuSelection);
             break;
 
         #ifdef ENABLE_ALARM
@@ -1058,6 +1092,10 @@ void UI_DisplayMenu(void)
             strcpy(String, gSubMenu_BATTYP[gSubMenuSelection]);
             break;
 
+        case MENU_SET_NAV:
+            strcpy(String, gSubMenu_SET_NAV[gSubMenuSelection]);
+            break;
+
         case MENU_F1SHRT:
         case MENU_F1LONG:
         case MENU_F2SHRT:
@@ -1137,6 +1175,12 @@ void UI_DisplayMenu(void)
         case MENU_SET_GUI:
             strcpy(String, gSubMenu_SET_MET[gSubMenuSelection]); // Same as SET_MET
             break;
+
+        #ifdef ENABLE_FEAT_F4HWN_AUDIO
+            case MENU_SET_AUD:
+                strcpy(String, gSubMenu_SET_AUD[gSubMenuSelection]);
+                break;
+        #endif
 
         #ifdef ENABLE_FEAT_F4HWN_NARROWER
             case MENU_SET_NFM:
@@ -1260,55 +1304,9 @@ void UI_DisplayMenu(void)
         }
     }
 
-    if (UI_MENU_GetCurrentMenuId() == MENU_SLIST1 || UI_MENU_GetCurrentMenuId() == MENU_SLIST2 || UI_MENU_GetCurrentMenuId() == MENU_SLIST3)
+    if (UI_MENU_GetCurrentMenuId() == MENU_S_PRI_CH_1 || UI_MENU_GetCurrentMenuId() == MENU_S_PRI_CH_2)
     {
-        i = UI_MENU_GetCurrentMenuId() - MENU_SLIST1;
 
-        char *pPrintStr = String;
-
-        if (gSubMenuSelection < 0) {
-            pPrintStr = "NULL";
-        } else {
-            UI_GenerateChannelStringEx(String, true, gSubMenuSelection);
-            pPrintStr = String;
-        }
-
-        // channel number
-        UI_PrintString(pPrintStr, menu_item_x1, menu_item_x2, 0, 8);
-
-        SETTINGS_FetchChannelName(String, gSubMenuSelection);
-        pPrintStr = String[0] ? String : "--";
-
-        // channel name and scan-list
-        if (gSubMenuSelection < 0 || !gEeprom.SCAN_LIST_ENABLED[i]) {
-            UI_PrintString(pPrintStr, menu_item_x1, menu_item_x2, 2, 8);
-        } else {
-            /*
-            UI_PrintStringSmallNormal(pPrintStr, menu_item_x1, menu_item_x2, 2);
-
-            if (IS_MR_CHANNEL(gEeprom.SCANLIST_PRIORITY_CH1[i])) {
-                sprintf(String, "PRI%d:%u", 1, gEeprom.SCANLIST_PRIORITY_CH1[i] + 1);
-                UI_PrintString(String, menu_item_x1, menu_item_x2, 3, 8);
-            }
-
-            if (IS_MR_CHANNEL(gEeprom.SCANLIST_PRIORITY_CH2[i])) {
-                sprintf(String, "PRI%d:%u", 2, gEeprom.SCANLIST_PRIORITY_CH2[i] + 1);
-                UI_PrintString(String, menu_item_x1, menu_item_x2, 5, 8);
-            }
-            */
-
-            UI_PrintStringSmallNormal(pPrintStr, menu_item_x1, menu_item_x2, 2);
-
-            for (uint8_t pri = 1; pri <= 2; pri++) {
-                uint8_t channel = (pri == 1) ? gEeprom.SCANLIST_PRIORITY_CH1[i] : gEeprom.SCANLIST_PRIORITY_CH2[i];
-
-                if (IS_MR_CHANNEL(channel)) {
-                    sprintf(String, "PRI%d:%u", pri, channel + 1);
-                    UI_PrintString(String, menu_item_x1, menu_item_x2, pri * 2 + 1, 8);
-                }
-            }
-
-        }
     }
 
     if ((UI_MENU_GetCurrentMenuId() == MENU_R_CTCS || UI_MENU_GetCurrentMenuId() == MENU_R_DCS) && gCssBackgroundScan)

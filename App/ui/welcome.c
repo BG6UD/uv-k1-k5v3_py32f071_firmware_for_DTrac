@@ -29,21 +29,21 @@
 #include "bitmaps.h"
 
 #ifdef ENABLE_FEAT_F4HWN_SCREENSHOT
-    #include "screenshot.h"
+#include "screenshot.h"
 #endif
 
 void UI_DisplayReleaseKeys(void)
 {
-    memset(gStatusLine,  0, sizeof(gStatusLine));
+    memset(gStatusLine, 0, sizeof(gStatusLine));
 #if defined(ENABLE_FEAT_F4HWN_CTR) || defined(ENABLE_FEAT_F4HWN_INV)
-        ST7565_ContrastAndInv();
+    ST7565_ContrastAndInv();
 #endif
     UI_DisplayClear();
 
     UI_PrintString("RELEASE", 0, 127, 1, 10);
     UI_PrintString("ALL KEYS", 0, 127, 3, 10);
 
-    ST7565_BlitStatusLine();  // blank status line
+    ST7565_BlitStatusLine(); // blank status line
     ST7565_BlitFullScreen();
 }
 
@@ -54,31 +54,35 @@ void UI_DisplayWelcome(void)
     char WelcomeString2[16];
     char WelcomeString3[20];
 
-    memset(gStatusLine,  0, sizeof(gStatusLine));
+    memset(gStatusLine, 0, sizeof(gStatusLine));
 
 #if defined(ENABLE_FEAT_F4HWN_CTR) || defined(ENABLE_FEAT_F4HWN_INV)
-        ST7565_ContrastAndInv();
+    ST7565_ContrastAndInv();
 #endif
     UI_DisplayClear();
 
 #ifdef ENABLE_FEAT_F4HWN
     ST7565_BlitStatusLine();
     ST7565_BlitFullScreen();
-    
-    if (gEeprom.POWER_ON_DISPLAY_MODE == POWER_ON_DISPLAY_MODE_NONE || gEeprom.POWER_ON_DISPLAY_MODE == POWER_ON_DISPLAY_MODE_SOUND) {
+
+    if (gEeprom.POWER_ON_DISPLAY_MODE == POWER_ON_DISPLAY_MODE_NONE || gEeprom.POWER_ON_DISPLAY_MODE == POWER_ON_DISPLAY_MODE_SOUND)
+    {
         ST7565_FillScreen(0x00);
 #else
-    if (gEeprom.POWER_ON_DISPLAY_MODE == POWER_ON_DISPLAY_MODE_NONE || gEeprom.POWER_ON_DISPLAY_MODE == POWER_ON_DISPLAY_MODE_FULL_SCREEN) {
+    if (gEeprom.POWER_ON_DISPLAY_MODE == POWER_ON_DISPLAY_MODE_NONE || gEeprom.POWER_ON_DISPLAY_MODE == POWER_ON_DISPLAY_MODE_FULL_SCREEN)
+    {
         ST7565_FillScreen(0xFF);
 #endif
-    } else {
+    }
+    else
+    {
         memset(WelcomeString0, 0, sizeof(WelcomeString0));
         memset(WelcomeString1, 0, sizeof(WelcomeString1));
 
         // 0x0EB0
-        PY25Q16_ReadBuffer(0x007020, WelcomeString0, 16);
+        PY25Q16_ReadBuffer(0x00A0C8, WelcomeString0, 16);
         // 0x0EC0
-        PY25Q16_ReadBuffer(0x007030, WelcomeString1, 16);
+        PY25Q16_ReadBuffer(0x00A0D8, WelcomeString1, 16);
 
         sprintf(WelcomeString2, "%u.%02uV %u%%",
                 gBatteryVoltageAverage / 100,
@@ -90,30 +94,30 @@ void UI_DisplayWelcome(void)
             strcpy(WelcomeString0, "VOLTAGE");
             strcpy(WelcomeString1, WelcomeString2);
         }
-        else if(gEeprom.POWER_ON_DISPLAY_MODE == POWER_ON_DISPLAY_MODE_ALL)
+        else if (gEeprom.POWER_ON_DISPLAY_MODE == POWER_ON_DISPLAY_MODE_ALL)
         {
-            if(strlen(WelcomeString0) == 0 && strlen(WelcomeString1) == 0)
+            if (strlen(WelcomeString0) == 0 && strlen(WelcomeString1) == 0)
             {
                 strcpy(WelcomeString0, "WELCOME");
                 strcpy(WelcomeString1, WelcomeString2);
             }
-            else if(strlen(WelcomeString0) == 0 || strlen(WelcomeString1) == 0)
+            else if (strlen(WelcomeString0) == 0 || strlen(WelcomeString1) == 0)
             {
-                if(strlen(WelcomeString0) == 0)
+                if (strlen(WelcomeString0) == 0)
                 {
                     strcpy(WelcomeString0, WelcomeString1);
                 }
                 strcpy(WelcomeString1, WelcomeString2);
             }
         }
-        else if(gEeprom.POWER_ON_DISPLAY_MODE == POWER_ON_DISPLAY_MODE_MESSAGE)
+        else if (gEeprom.POWER_ON_DISPLAY_MODE == POWER_ON_DISPLAY_MODE_MESSAGE)
         {
-            if(strlen(WelcomeString0) == 0)
+            if (strlen(WelcomeString0) == 0)
             {
                 strcpy(WelcomeString0, "WELCOME");
             }
 
-            if(strlen(WelcomeString1) == 0)
+            if (strlen(WelcomeString1) == 0)
             {
                 strcpy(WelcomeString1, "BIENVENUE");
             }
@@ -131,8 +135,8 @@ void UI_DisplayWelcome(void)
         {
             gFrameBuffer[4][i] ^= 0xFF;
         }
-
-        UI_PrintStringSmallNormal("for DTrac APP v1.0", 0, 127, 6);
+        
+        UI_PrintStringSmallNormal("for DTrac v1.0.1", 0, 127, 6);
 
         sprintf(WelcomeString3, "%s Edition", Edition);
         // UI_PrintStringSmallNormal(WelcomeString3, 0, 127, 6);
@@ -146,12 +150,12 @@ void UI_DisplayWelcome(void)
                 }
                 else
                 {
-                    memcpy(gFrameBuffer[6] + 103, BITMAP_NotReady, sizeof(BITMAP_NotReady));                    
+                    memcpy(gFrameBuffer[6] + 103, BITMAP_NotReady, sizeof(BITMAP_NotReady));
                 }
             #else
                 UI_PrintStringSmallNormal(Edition, 18, 0, 5);
                 memcpy(gFrameBuffer[5] + 103, BITMAP_Ready, sizeof(BITMAP_Ready));
-                
+
                 #ifdef ENABLE_FEAT_F4HWN_RESCUE_OPS
                     UI_PrintStringSmallNormal("RescueOps", 18, 0, 6);
                     if(gEeprom.MENU_LOCK == true) {
@@ -165,7 +169,7 @@ void UI_DisplayWelcome(void)
             #endif
         #else
             UI_PrintStringSmallNormal(Edition, 18, 0, 6);
-            memcpy(gFrameBuffer[6] + 103, BITMAP_Ready, sizeof(BITMAP_Ready));                    
+            memcpy(gFrameBuffer[6] + 103, BITMAP_Ready, sizeof(BITMAP_Ready));
         #endif
         */
 
@@ -204,11 +208,11 @@ void UI_DisplayWelcome(void)
         UI_PrintStringSmallNormal(Version, 0, 127, 6);
 #endif
 
-        //ST7565_BlitStatusLine();  // blank status line : I think it's useless
+        // ST7565_BlitStatusLine();  // blank status line : I think it's useless
         ST7565_BlitFullScreen();
 
-        #ifdef ENABLE_FEAT_F4HWN_SCREENSHOT
-            getScreenShot(true);
-        #endif
+#ifdef ENABLE_FEAT_F4HWN_SCREENSHOT
+        getScreenShot(true);
+#endif
     }
 }

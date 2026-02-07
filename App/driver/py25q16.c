@@ -25,6 +25,7 @@
 #include "driver/system.h"
 #include "driver/systick.h"
 #include "external/printf/printf.h"
+#include "misc.h"
 
 // #define DEBUG
 
@@ -39,7 +40,7 @@
 
 static uint32_t SectorCacheAddr = 0x1000000;
 static uint8_t SectorCache[SECTOR_SIZE];
-static uint8_t BlackHole[1];
+static uint8_t BlackHole[4] __attribute__((aligned(4)));
 static volatile bool TC_Flag;
 
 static inline void CS_Assert()
@@ -226,20 +227,20 @@ void PY25Q16_Init()
 
 void PY25Q16_ReadBuffer(uint32_t Address, void *pBuffer, uint32_t Size)
 {
-#ifdef DEBUG
-    printf("spi flash read: %06x %ld\n", Address, Size);
-#endif
     CS_Assert();
 
-    SPI_WriteByte(0x03); // Fast read
-    WriteAddr(Address);
+    SPI_WriteByte(0x03);      // Send read command
+    WriteAddr(Address);        // Send address (3 bytes)
 
-    if (Size >= 16)
+    // CRITICAL: Flush RX FIFO before DMA to remove residual data
+    while (LL_SPI_RX_FIFO_EMPTY != LL_SPI_GetRxFIFOLevel(SPIx))
     {
-        SPI_ReadBuf((uint8_t *)pBuffer, Size);
+        LL_SPI_ReceiveData8(SPIx);  // Read and discard
     }
-    else
-    {
+
+    if (Size >= 16) {
+        SPI_ReadBuf((uint8_t *)pBuffer, Size);
+    } else {
         for (uint32_t i = 0; i < Size; i++)
         {
             ((uint8_t *)(pBuffer))[i] = SPI_WriteByte(0xff);
@@ -254,6 +255,11 @@ void PY25Q16_WriteBuffer(uint32_t Address, const void *pBuffer, uint32_t Size, b
 #ifdef DEBUG
     printf("spi flash write: %06x %ld %d\n", Address, Size, Append);
 #endif
+
+    #ifdef ENABLE_FEAT_F4HWN_DEBUG
+        gDebug++;
+    #endif
+
     uint32_t SecIndex = Address / SECTOR_SIZE;
     uint32_t SecAddr = SecIndex * SECTOR_SIZE;
     uint32_t SecOffset = Address % SECTOR_SIZE;
@@ -261,6 +267,9 @@ void PY25Q16_WriteBuffer(uint32_t Address, const void *pBuffer, uint32_t Size, b
 
     while (Size)
     {
+        // CRITICAL FIX #1: Wait for flash ready before processing each sector
+        WaitWIP();
+
         if (Size < SecSize)
         {
             SecSize = Size;
@@ -289,6 +298,10 @@ void PY25Q16_WriteBuffer(uint32_t Address, const void *pBuffer, uint32_t Size, b
             if (Erase)
             {
                 SectorErase(SecAddr);
+
+                // CRITICAL FIX #2: Erase takes ~300ms, must complete before program starts
+                WaitWIP();
+
                 if (Append)
                 {
                     SectorProgram(SecAddr, SectorCache, SecOffset + SecSize);
@@ -313,6 +326,9 @@ void PY25Q16_WriteBuffer(uint32_t Address, const void *pBuffer, uint32_t Size, b
         SecOffset = 0;
         SecSize = SECTOR_SIZE;
     } // while
+
+    // CRITICAL FIX #3: Ensure all writes complete before function returns
+    WaitWIP();
 }
 
 void PY25Q16_SectorErase(uint32_t Address)
@@ -454,11 +470,20 @@ void DMA1_Channel4_5_6_7_IRQHandler()
         LL_DMA_DisableIT_TC(DMA1, CHANNEL_RD);
         LL_DMA_ClearFlag_TC4(DMA1);
 
-        while (LL_SPI_TX_FIFO_EMPTY != LL_SPI_GetTxFIFOLevel(SPIx))
+        // Wait a tiny bit for SPI to finish
+        SYSTICK_DelayUs(10);  // ← ADD THIS
+
+        uint32_t timeout = 10000;
+        
+        while ((LL_SPI_TX_FIFO_EMPTY != LL_SPI_GetTxFIFOLevel(SPIx)) && timeout--)
             ;
-        while (LL_SPI_IsActiveFlag_BSY(SPIx))
+        
+        timeout = 10000;
+        while (LL_SPI_IsActiveFlag_BSY(SPIx) && timeout--)
             ;
-        while (LL_SPI_RX_FIFO_EMPTY != LL_SPI_GetRxFIFOLevel(SPIx))
+        
+        timeout = 10000;
+        while ((LL_SPI_RX_FIFO_EMPTY != LL_SPI_GetRxFIFOLevel(SPIx)) && timeout--)
             ;
 
         LL_SPI_DisableDMAReq_TX(SPIx);
