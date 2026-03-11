@@ -1,5 +1,5 @@
 # 修改文件
-CMakePresets.json -> "ENABLE_BYP_RAW_DEMODULATORS": true
+CMakePresets.json -> "ENABLE_BYP_RAW_DEMODULATORS": true;"ENABLE_VOICE": true,
 App/app/uart.c
 App/ui/welcome.c
 
