@@ -191,7 +191,7 @@
                 "ENABLE_FEAT_F4HWN_AUDIO": true,
                 "ENABLE_SWD": true,
                 "EDITION_STRING": "Fusion",
-                "TARGET": "uv-k1-k5-k6_py32f071_en_firmware_for_dtrac.fusion"
+                "TARGET": "uv-k1-k5v3_py32f071_en_firmware_for_dtrac.fusion"
             }
         }
     ],
