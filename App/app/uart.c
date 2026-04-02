@@ -23,8 +23,10 @@
 #ifdef ENABLE_FMRADIO
 #include "app/fm.h"
 #endif
+#if defined(ENABLE_DTrac)
 #include "app/app.h"        //for DTrac
 #include "driver/systick.h" //for DTrac
+#endif
 #include "app/uart.h"
 #include "board.h"
 #include "py32f071_ll_dma.h"
@@ -74,6 +76,8 @@ typedef struct
     uint16_t ID;
 } Footer_t;
 
+#if defined(ENABLE_DTrac)
+
 // for DTrac app CTCSS_CODE
 typedef struct
 {
@@ -108,6 +112,8 @@ typedef struct
     Header_t Header;
     char MonitorStatus;
 } CMD_5555_t;
+
+#endif
 
 typedef struct
 {
@@ -535,6 +541,8 @@ static void CMD_051D(uint32_t Port, const uint8_t *pBuffer)
     SendReply(Port, &Reply, sizeof(Reply));
 }
 
+#if defined(ENABLE_DTrac)
+
 // for DTrac app CTCSS_CODE
 static void CMD_9999(const uint8_t *pBuffer)
 {
@@ -690,6 +698,8 @@ static void CMD_5555(const uint8_t *pBuffer)
         lastMonitorStatus = pCmd->MonitorStatus;
     }
 }
+
+#endif
 
 #ifdef ENABLE_EXTRA_UART_CMD
 // read RSSI
@@ -1031,6 +1041,8 @@ void UART_HandleCommand(uint32_t Port)
 
     switch (pUART_Command->Header.ID)
     {
+
+#if defined(ENABLE_DTrac)
     case 0x9999:
         CMD_9999(pUART_Command->Buffer); // for DTrac app TX CTCSS
         break;
@@ -1050,6 +1062,7 @@ void UART_HandleCommand(uint32_t Port)
     case 0x5555:
         CMD_5555(pUART_Command->Buffer); // for DTrac app MONITOR
         break;
+#endif
 
     case 0x0514:
         CMD_0514(Port, pUART_Command->Buffer);

@@ -1,5 +1,9 @@
-# 修改文件
+# for DTrac 修改文件
 CMakePresets.json -> "ENABLE_BYP_RAW_DEMODULATORS": true;
+
+CMakePresets.json->"ENABLE_BYP_RAW_DEMODULATORS": true,
+
+CMakeLists.txt - > enable_feature(ENABLE_DTrac)
 
 App/app/uart.c
 

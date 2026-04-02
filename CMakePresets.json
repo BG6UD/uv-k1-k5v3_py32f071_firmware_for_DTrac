@@ -42,6 +42,7 @@
                 "ENABLE_COPY_CHAN_TO_VFO": true,
                 "ENABLE_REDUCE_LOW_MID_TX_POWER": false,
                 "ENABLE_BYP_RAW_DEMODULATORS": true,
+                "ENABLE_DTrac":true,
                 "ENABLE_BLMIN_TMP_OFF": false,
                 "ENABLE_SCAN_RANGES": true,
                 "ENABLE_REGA": false,
@@ -71,7 +72,7 @@
                 "ENABLE_UART_RW_BK_REGS": false,
                 "ENABLE_SWD": false,
                 "VERSION_STRING_1": "v0.22",
-                "VERSION_STRING_2": "v5.3.0"
+                "VERSION_STRING_2": "v5.3.1"
             }
         },
         {
