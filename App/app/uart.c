@@ -23,7 +23,7 @@
 #ifdef ENABLE_FMRADIO
 #include "app/fm.h"
 #endif
-#if defined(ENABLE_DTrac)
+#if defined(ENABLE_DTRAC)
 #include "app/app.h"        //for DTrac
 #include "driver/systick.h" //for DTrac
 #endif
@@ -76,7 +76,7 @@ typedef struct
     uint16_t ID;
 } Footer_t;
 
-#if defined(ENABLE_DTrac)
+#if defined(ENABLE_DTRAC)
 
 // for DTrac app CTCSS_CODE
 typedef struct
@@ -541,7 +541,7 @@ static void CMD_051D(uint32_t Port, const uint8_t *pBuffer)
     SendReply(Port, &Reply, sizeof(Reply));
 }
 
-#if defined(ENABLE_DTrac)
+#if defined(ENABLE_DTRAC)
 
 // for DTrac app CTCSS_CODE
 static void CMD_9999(const uint8_t *pBuffer)
@@ -1042,7 +1042,7 @@ void UART_HandleCommand(uint32_t Port)
     switch (pUART_Command->Header.ID)
     {
 
-#if defined(ENABLE_DTrac)
+#if defined(ENABLE_DTRAC)
     case 0x9999:
         CMD_9999(pUART_Command->Buffer); // for DTrac app TX CTCSS
         break;
