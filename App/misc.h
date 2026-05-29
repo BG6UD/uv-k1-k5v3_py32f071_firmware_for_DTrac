@@ -39,8 +39,6 @@
 #define FM_CHANNELS_MAX 48
 #define MR_CHANNELS_MAX 1024
 #define MR_CHANNELS_LIST 24
-#define MENU_ITEMS 69
-
 // CACHE-BASED OPTIMIZATION: Only keep active channels in RAM
 // Full array stays in EEPROM, cache holds ~10 most-used channels
 #define MR_CHANNELS_CACHE_SIZE 10
@@ -176,6 +174,10 @@ extern enum BacklightOnRxTx_t gSetting_backlight_on_tx_rx;
 #ifdef ENABLE_FEAT_F4HWN_SLEEP 
     extern uint8_t           gSetting_set_off;
     extern bool              gWakeUp;
+#endif
+
+#ifdef ENABLE_FEAT_F4HWN_SCAN_FASTER
+    extern bool              gSetting_set_scn;
 #endif
 
 #ifdef ENABLE_FEAT_F4HWN

@@ -409,8 +409,8 @@ static void CMD_0514(uint32_t Port, const uint8_t *pBuffer)
 
     gSerialConfigCountDown_500ms = 12; // 6 sec
 
-    // turn the LCD backlight off
-    BACKLIGHT_TurnOff();
+    if (gEeprom.BACKLIGHT_TIME < 61) // backlight is set to be always on
+        BACKLIGHT_TurnOff();         // turn the LCD backlight off
 
     SendVersion(Port);
 }
@@ -820,8 +820,8 @@ static void CMD_052F(uint32_t Port, const uint8_t *pBuffer)
     }
 #endif
 
-    // turn the LCD backlight off
-    BACKLIGHT_TurnOff();
+    if (gEeprom.BACKLIGHT_TIME < 61) // backlight is set to be always on
+        BACKLIGHT_TurnOff();         // turn the LCD backlight off
 
     SendVersion(Port);
 }
@@ -1041,7 +1041,6 @@ void UART_HandleCommand(uint32_t Port)
 
     switch (pUART_Command->Header.ID)
     {
-
 #if defined(ENABLE_DTRAC)
     case 0x9999:
         CMD_9999(pUART_Command->Buffer); // for DTrac app TX CTCSS
@@ -1063,7 +1062,6 @@ void UART_HandleCommand(uint32_t Port)
         CMD_5555(pUART_Command->Buffer); // for DTrac app MONITOR
         break;
 #endif
-
     case 0x0514:
         CMD_0514(Port, pUART_Command->Buffer);
         break;
