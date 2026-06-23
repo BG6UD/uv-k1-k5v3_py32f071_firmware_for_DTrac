@@ -354,7 +354,7 @@ void UI_DisplayWelcome(void)
 
         sprintf(WelcomeString3, "%s Edition", Edition);
 #if defined(ENABLE_DTRAC)
-        UI_PrintStringSmallNormal("for DTrac v1.0.7", 0, 127, 6);
+        UI_PrintStringSmallNormal("for DTrac v1.0.8", 0, 127, 6);
 #else
         UI_PrintStringSmallNormal(WelcomeString3, 0, 127, 6);
 #endif
