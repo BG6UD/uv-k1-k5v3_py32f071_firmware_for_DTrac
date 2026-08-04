@@ -1,5 +1,5 @@
-/* Copyright 2023 Dual Tachyon
- * https://github.com/DualTachyon
+/* Copyright 2024 Armel F4HWN
+ * https://github.com/armel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -12,24 +12,13 @@
  *     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  *     See the License for the specific language governing permissions and
  *     limitations under the License.
- *
  */
 
-#ifndef DRIVER_UART_H
-#define DRIVER_UART_H
+#ifndef K5VIEWER_H
+#define K5VIEWER_H
 
-#include <stdint.h>
-#include <stdbool.h>
-
-extern uint8_t UART_DMA_Buffer[256];
-
-void UART_Init(void);
-void UART_Send(const void *pBuffer, uint32_t Size);
-void UART_LogSend(const void *pBuffer, uint32_t Size);
-
-#ifdef ENABLE_FEAT_F4HWN_K5VIEWER
-    bool UART_IsCableConnected(void);
-#endif
+void K5VIEWER_Update(bool force);
+void K5VIEWER_ParseInput(void);
+bool K5VIEWER_HasPendingStateChange(void);
 
 #endif
-

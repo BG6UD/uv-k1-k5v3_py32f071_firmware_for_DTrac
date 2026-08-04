@@ -29,8 +29,8 @@
 #include "version.h"
 #include "bitmaps.h"
 
-#ifdef ENABLE_FEAT_F4HWN_SCREENSHOT
-#include "screenshot.h"
+#ifdef ENABLE_FEAT_F4HWN_K5VIEWER
+#include "k5viewer.h"
 #endif
 
 #ifdef ENABLE_FEAT_F4HWN_LOGO
@@ -353,8 +353,9 @@ void UI_DisplayWelcome(void)
         */
 
         sprintf(WelcomeString3, "%s Edition", Edition);
+// UI_PrintStringSmallNormal(WelcomeString3, 0, 127, 6);
 #if defined(ENABLE_DTRAC)
-        UI_PrintStringSmallNormal("for DTrac v1.0.8", 0, 127, 6);
+        UI_PrintStringSmallNormal("for DTrac v1.0.9", 0, 127, 6);
 #else
         UI_PrintStringSmallNormal(WelcomeString3, 0, 127, 6);
 #endif
@@ -367,7 +368,7 @@ void UI_DisplayWelcome(void)
     ST7565_BlitStatusLine();
     ST7565_BlitFullScreen();
 
-#ifdef ENABLE_FEAT_F4HWN_SCREENSHOT
-    SCREENSHOT_Update(true);
+#ifdef ENABLE_FEAT_F4HWN_K5VIEWER
+    K5VIEWER_Update(true);
 #endif
 }
