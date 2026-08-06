@@ -70,6 +70,7 @@ if(ENABLE_FEAT_F4HWN)
         "AUTHOR_STRING_2=\"${AUTHOR_STRING_2}\""
         "VERSION_STRING_1=\"${VERSION_STRING_1}\""
         "VERSION_STRING_2=\"${VERSION_STRING_2}\""
+        "DISPLAY_VERSION_STRING_2=\"${DISPLAY_VERSION_STRING_2}\""
         "EDITION_STRING=\"${EDITION_STRING}\""
         ALERT_TOT=10
     )
@@ -210,6 +211,9 @@ enable_feature(ENABLE_FEAT_F4HWN_BEAM
 )
 enable_feature(ENABLE_FEAT_F4HWN_RXTX_LOG
     app/rxtx_log.c
+)
+enable_feature(ENABLE_FEAT_F4HWN_FOXHUNT
+    app/foxhunt.c
 )
 enable_feature(ENABLE_FEAT_F4HWN_RXTX_LOG_WRAP)
 enable_feature(ENABLE_FEAT_F4HWN_RXTX_LOG_K5VIEWER)

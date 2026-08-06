@@ -525,6 +525,9 @@ const t_sidefunction gSubMenu_SIDEFUNCTIONS[] =
     #ifdef ENABLE_FEAT_F4HWN_RXTX_LOG
         {"RF LOG",          ACTION_OPT_RXTX_LOG},
     #endif
+    #ifdef ENABLE_FEAT_F4HWN_FOXHUNT
+        {"FOX HUNT\nBEACON", ACTION_OPT_FOXHUNT},
+    #endif
 #endif
 };
 
@@ -1187,7 +1190,7 @@ void UI_DisplayMenu(void)
             if (page == p++) {
                 // Page 0: firmware identity.
 #ifdef ENABLE_FEAT_F4HWN
-                sprintf(String, "%s\n%s", AUTHOR_STRING_2, VERSION_STRING_2);
+                sprintf(String, "%s\n%s", AUTHOR_STRING_2, DISPLAY_VERSION_STRING_2);
                 UI_PrintStringSmallNormal(Edition, menu_item_x1 - 1, menu_item_x2, 6);
 #else
                 sprintf(String, "%u.%02uV\n%u%%",

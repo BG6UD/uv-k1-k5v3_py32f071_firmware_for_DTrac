@@ -48,6 +48,9 @@
 #ifdef ENABLE_FEAT_F4HWN_RXTX_LOG
     #include "app/rxtx_log.h"
 #endif
+#ifdef ENABLE_FEAT_F4HWN_FOXHUNT
+    #include "app/foxhunt.h"
+#endif
 
 #if defined(ENABLE_FMRADIO)
 static void ACTION_Scan_FM(bool bRestart);
@@ -61,7 +64,7 @@ inline static void ACTION_1750() { ACTION_AlarmOr1750(true); };
 
 inline static void ACTION_ScanRestart() { ACTION_Scan(true); };
 
-void (*action_opt_table[])(void) = {
+void (*const action_opt_table[])(void) = {
     [ACTION_OPT_NONE] = &FUNCTION_NOP,
     [ACTION_OPT_POWER] = &ACTION_Power,
     [ACTION_OPT_MONITOR] = &ACTION_Monitor,
@@ -136,6 +139,9 @@ void (*action_opt_table[])(void) = {
 #endif
 #ifdef ENABLE_FEAT_F4HWN_RXTX_LOG
     [ACTION_OPT_RXTX_LOG] = &ACTION_RxTxLog,
+#endif
+#ifdef ENABLE_FEAT_F4HWN_FOXHUNT
+    [ACTION_OPT_FOXHUNT] = &ACTION_FoxHunt,
 #endif
 };
 
@@ -243,7 +249,7 @@ void ACTION_Scan(bool bRestart)
 
         // channel mode. Keep scanning but toggle between scan lists
         RADIO_NextValidList(1);
-        UI_MAIN_NotifyScanProgressDataChanged();
+        UI_MAIN_NotifyScanListChanged();
 
         #ifdef ENABLE_FEAT_F4HWN_RESUME_STATE
             SETTINGS_WriteCurrentState();
@@ -383,6 +389,9 @@ void ACTION_Handle(KEY_Code_t Key, bool bKeyPressed, bool bKeyHeld)
     #ifdef ENABLE_FEAT_F4HWN_BEAM
             case ACTION_OPT_BEAM:
     #endif
+    #ifdef ENABLE_FEAT_F4HWN_FOXHUNT
+            case ACTION_OPT_FOXHUNT:
+    #endif
                 gBeepToPlay = BEEP_500HZ_60MS_DOUBLE_BEEP_OPTIONAL;
                 return;
 
@@ -415,6 +424,12 @@ void ACTION_FM(void)
         }
 
         gMonitor = false;
+
+        if (gScanStateDir != SCAN_OFF) {
+            // Stop the channel/frequency scan before switching to the FM radio.
+            gScanKeepResult = false;
+            CHFRSCANNER_Stop();
+        }
 
         RADIO_SelectVfos();
         RADIO_SetupRegisters(true);
