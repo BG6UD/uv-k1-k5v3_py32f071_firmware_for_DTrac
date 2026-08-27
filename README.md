@@ -26,6 +26,7 @@ https://v.douyin.com/rpza7seZ6w8/
 # for DTrac 修改文件
 - CMakePresets.json -> "ENABLE_BYP_RAW_DEMODULATORS": true;
 - CMakePresets.json -> "ENABLE_DTRAC": true,
+- CMakePresets.json -> "EDITION_STRING": "for DTrac"
 - CMakePresets.json -> "TARGET": "uv-k1-k5v3_py32f071_firmware_for_dtrac.fusion"
 - CMakeLists.txt - > enable_feature(ENABLE_DTRAC)
 - App/app/uart.c
