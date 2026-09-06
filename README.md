@@ -212,7 +212,8 @@ Fusion is the reference edition of the project. It provides an all-in-one firmwa
   - scrolling signal-history graph,
   - peak, minimum and trend indicators,
   - selectable RF attenuation,
-  - silent, Geiger-style and received-audio modes.
+  - silent, Geiger-style and received-audio modes,
+  - long-press `F` keypad lock (attenuation stays adjustable with the arrow keys).
 - Integrated Morse Beacon transmitter with:
   - `MOE`, `MOI`, `MOS`, `MOH`, `MO5` and `MO` identifiers,
   - optional callsign identification,
@@ -220,6 +221,7 @@ Fusion is the reference edition of the project. It provides an all-in-one firmwa
   - live TX and idle countdowns,
   - persisted Beacon settings,
   - interactive control during transmission,
+  - shared long-press `F` keypad lock,
   - TX-lock, modulation and battery-safety checks.
 - Fox Hunt and Beacon screens are mirrored to UV Studio's integrated K5Viewer.
 

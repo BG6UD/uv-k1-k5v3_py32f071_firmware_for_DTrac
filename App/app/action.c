@@ -51,6 +51,9 @@
 #ifdef ENABLE_FEAT_F4HWN_FOXHUNT
     #include "app/foxhunt.h"
 #endif
+#ifdef ENABLE_FEAT_F4HWN_ACTION_PICKER
+    #include "ui/menu.h"
+#endif
 
 #if defined(ENABLE_FMRADIO)
 static void ACTION_Scan_FM(bool bRestart);
@@ -299,6 +302,120 @@ void ACTION_SwitchDemodul(void)
 }
 
 
+#ifdef ENABLE_FMRADIO
+inline static bool ACTION_IsBlockedInFM(uint8_t action)
+{
+    switch (action) {
+        case ACTION_OPT_POWER:
+        case ACTION_OPT_MONITOR:
+        case ACTION_OPT_A_B:
+        case ACTION_OPT_VFO_MR:
+        case ACTION_OPT_SWITCH_DEMODUL:
+#ifdef ENABLE_VOX
+        case ACTION_OPT_VOX:
+#endif
+#ifdef ENABLE_FEAT_F4HWN
+        case ACTION_OPT_RXMODE:
+        case ACTION_OPT_MAINONLY:
+        case ACTION_OPT_WN:
+    #ifdef ENABLE_FEAT_F4HWN_AUDIO
+        case ACTION_OPT_RXA:
+    #endif
+    #ifdef ENABLE_FEAT_F4HWN_RESCUE_OPS
+        case ACTION_OPT_POWER_HIGH:
+        case ACTION_OPT_REMOVE_OFFSET:
+    #endif
+#endif
+#ifdef ENABLE_FEAT_F4HWN_BEAM
+        case ACTION_OPT_BEAM:
+#endif
+#ifdef ENABLE_FEAT_F4HWN_FOXHUNT
+        case ACTION_OPT_FOXHUNT:
+#endif
+            return true;
+
+        default:
+            return false;
+    }
+}
+#endif
+
+#ifdef ENABLE_FEAT_F4HWN_ACTION_PICKER
+static void ACTION_Execute(uint8_t action)
+{
+    if (action >= ACTION_OPT_LEN || action_opt_table[action] == NULL) {
+        gBeepToPlay = BEEP_500HZ_60MS_DOUBLE_BEEP_OPTIONAL;
+        return;
+    }
+
+#ifdef ENABLE_FMRADIO
+    if (gFmRadioMode && ACTION_IsBlockedInFM(action)) {
+        gBeepToPlay = BEEP_500HZ_60MS_DOUBLE_BEEP_OPTIONAL;
+        return;
+    }
+#endif
+
+    gBeepToPlay = BEEP_1KHZ_60MS_OPTIONAL;
+    action_opt_table[action]();
+}
+
+uint8_t gActionPickerKey;
+uint8_t gActionPickerSelection[2] = {1, 1};
+uint8_t gActionPickerTimeout_500ms;
+
+bool ACTION_PickerProcessKey(KEY_Code_t key, bool isPressed, bool isHeld)
+{
+    if (gActionPickerKey == 0)
+        return false;
+    if (isPressed)
+        gActionPickerTimeout_500ms = ACTION_PICKER_TIMEOUT_500MS;
+    uint8_t *selection = &gActionPickerSelection[gActionPickerKey - 1];
+
+    switch (key) {
+        case KEY_UP:
+        case KEY_DOWN:
+            if (isPressed && !isHeld) {
+                if (key == KEY_UP) {
+                    if (--*selection == 0)
+                        *selection = gSubMenu_SIDEFUNCTIONS_size - 1;
+                }
+                else if (++*selection >= gSubMenu_SIDEFUNCTIONS_size) {
+                    *selection = 1;
+                }
+
+                gBeepToPlay = BEEP_1KHZ_60MS_OPTIONAL;
+                gUpdateDisplay = true;
+            }
+            return true;
+
+        case KEY_MENU:
+            if (!isPressed && !isHeld) {
+                const uint8_t action = gSubMenu_SIDEFUNCTIONS[*selection].id;
+                gActionPickerKey = 0;
+                gUpdateDisplay = true;
+                ACTION_Execute(action);
+            }
+            return true;
+
+        case KEY_EXIT:
+        case KEY_F:
+            if (!isPressed) {
+                gActionPickerKey = 0;
+                gUpdateDisplay = true;
+            }
+            return true;
+
+        case KEY_PTT:
+            gActionPickerKey = 0;
+            gUpdateDisplay = true;
+            return false;
+
+        default:
+            return true;
+    }
+}
+#endif
+
 void ACTION_Handle(KEY_Code_t Key, bool bKeyPressed, bool bKeyHeld)
 {
     HideFKeyIcon();
@@ -360,48 +477,20 @@ void ACTION_Handle(KEY_Code_t Key, bool bKeyPressed, bool bKeyHeld)
     }
 
     // held or released after short press
-
+#ifdef ENABLE_FEAT_F4HWN_ACTION_PICKER
+    ACTION_Execute(func);
+#else
     gBeepToPlay = BEEP_1KHZ_60MS_OPTIONAL;
     
 #ifdef ENABLE_FMRADIO
-    if (gFmRadioMode) { // do not run these actions in FM radio mode
-        switch (func) {
-            case ACTION_OPT_POWER:
-            case ACTION_OPT_MONITOR:
-            case ACTION_OPT_A_B:
-            case ACTION_OPT_VFO_MR:
-            case ACTION_OPT_SWITCH_DEMODUL:
-    #ifdef ENABLE_VOX
-            case ACTION_OPT_VOX:
-    #endif
-    #ifdef ENABLE_FEAT_F4HWN
-            case ACTION_OPT_RXMODE:
-            case ACTION_OPT_MAINONLY:
-            case ACTION_OPT_WN:
-        #ifdef ENABLE_FEAT_F4HWN_AUDIO
-            case ACTION_OPT_RXA:
-        #endif
-        #ifdef ENABLE_FEAT_F4HWN_RESCUE_OPS
-            case ACTION_OPT_POWER_HIGH:
-            case ACTION_OPT_REMOVE_OFFSET:
-        #endif
-    #endif
-    #ifdef ENABLE_FEAT_F4HWN_BEAM
-            case ACTION_OPT_BEAM:
-    #endif
-    #ifdef ENABLE_FEAT_F4HWN_FOXHUNT
-            case ACTION_OPT_FOXHUNT:
-    #endif
-                gBeepToPlay = BEEP_500HZ_60MS_DOUBLE_BEEP_OPTIONAL;
-                return;
-
-            default:
-                break;
-        }
+    if (gFmRadioMode && ACTION_IsBlockedInFM(func)) {
+        gBeepToPlay = BEEP_500HZ_60MS_DOUBLE_BEEP_OPTIONAL;
+        return;
     }
 #endif
 
     action_opt_table[func]();
+#endif
 }
 
 

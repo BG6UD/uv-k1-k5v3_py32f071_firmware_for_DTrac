@@ -53,9 +53,10 @@ build_preset() {
   docker run --rm \
     -u $(id -u):$(id -g) \
     -it -v "$PWD":/src -w /src "$IMAGE" \
-    bash -c "which arm-none-eabi-gcc && arm-none-eabi-gcc --version && \
-             cmake --preset ${preset} ${EXTRA_ARGS[@]+"${EXTRA_ARGS[@]}"} && \
-             cmake --build --preset ${preset} -j"
+    bash -c 'which arm-none-eabi-gcc && arm-none-eabi-gcc --version &&
+             cmake --preset "$1" "${@:2}" &&
+             cmake --build --preset "$1" -j' \
+    bash "${preset}" ${EXTRA_ARGS[@]+"${EXTRA_ARGS[@]}"}
   echo "✅ Done: ${preset}"
 }
 
