@@ -1,0 +1,103 @@
+
+Discarded input sections
+
+ .text          0x00000000        0x0 /tmp/ccGdx2eb.o
+ .data          0x00000000        0x0 /tmp/ccGdx2eb.o
+ .bss           0x00000000        0x0 /tmp/ccGdx2eb.o
+ .comment       0x00000000       0x46 /tmp/ccGdx2eb.o
+
+Memory Configuration
+
+Name             Origin             Length             Attributes
+APP              0x20000280         0x00001000         xrw
+*default*        0x00000000         0xffffffff
+
+Linker script and memory map
+
+                0x20000280                        APP_VMA = 0x20000280
+LOAD /tmp/ccGdx2eb.o
+LOAD /opt/toolchain/bin/../lib/gcc/arm-none-eabi/13.3.1/thumb/v6-m/nofp/libgcc.a
+                0x20000280                        APP_VMA = DEFINED (APP_VMA)?APP_VMA:0x20000280
+                0x00001000                        APP_LENGTH = 0x1000
+
+.app            0x20000280      0xec4
+ *(.text.entry)
+ .text.entry    0x20000280      0xa68 /tmp/ccGdx2eb.o
+                0x20000280                app_main
+ *(.text .text.*)
+ .text.put      0x20000ce8       0x10 /tmp/ccGdx2eb.o
+ .text.tag      0x20000cf8       0x58 /tmp/ccGdx2eb.o
+ .text.blitPage
+                0x20000d50       0x1c /tmp/ccGdx2eb.o
+ .text.page     0x20000d6c       0x24 /tmp/ccGdx2eb.o
+ .text.clkCyc   0x20000d90       0x3c /tmp/ccGdx2eb.o
+ .text.adcSelPA4
+                0x20000dcc       0x38 /tmp/ccGdx2eb.o
+ .text.adcRestore
+                0x20000e04       0x1c /tmp/ccGdx2eb.o
+ .text.tone     0x20000e20       0x30 /tmp/ccGdx2eb.o
+ .text.hunt     0x20000e50       0x10 /tmp/ccGdx2eb.o
+ .text.scanStart
+                0x20000e60       0x34 /tmp/ccGdx2eb.o
+ .text.puti     0x20000e94       0x3c /tmp/ccGdx2eb.o
+ .text.memset   0x20000ed0       0x10 /tmp/ccGdx2eb.o
+                0x20000ed0                memset
+ .text.restart  0x20000ee0       0x2c /tmp/ccGdx2eb.o
+ .text.endLine  0x20000f0c      0x120 /tmp/ccGdx2eb.o
+ .text.memcpy   0x2000102c       0x12 /tmp/ccGdx2eb.o
+                0x2000102c                memcpy
+ *fill*         0x2000103e        0x2 
+ .text.__aeabi_idivmod
+                0x20001040       0x14 /tmp/ccGdx2eb.o
+                0x20001040                __aeabi_idiv
+                0x20001040                __aeabi_idivmod
+ *(.rodata .rodata.*)
+ .rodata.P10    0x20001054        0xa /tmp/ccGdx2eb.o
+                0x20001060                        . = ALIGN (0x4)
+ *fill*         0x2000105e        0x2 
+ *(.data .data.*)
+                0x20001060                        . = ALIGN (0x4)
+                0x20001060                        __app_bss_start = .
+ *(.bss .bss.* COMMON)
+ .bss.str       0x20001060       0x22 /tmp/ccGdx2eb.o
+ *fill*         0x20001082        0x2 
+ .bss.g         0x20001084       0xc0 /tmp/ccGdx2eb.o
+                0x20001144                        . = ALIGN (0x4)
+                0x20001144                        __app_bss_end = .
+                0x20001144                        __app_end = .
+                0x00000001                        ASSERT ((__app_end <= (APP_VMA + APP_LENGTH)), SSTV overlay app overflows the 4 KiB overlay)
+
+.glue_7         0x20001144        0x0
+ .glue_7        0x20001144        0x0 linker stubs
+
+.glue_7t        0x20001144        0x0
+ .glue_7t       0x20001144        0x0 linker stubs
+
+.vfp11_veneer   0x20001144        0x0
+ .vfp11_veneer  0x20001144        0x0 linker stubs
+
+.v4_bx          0x20001144        0x0
+ .v4_bx         0x20001144        0x0 linker stubs
+
+.iplt           0x20001144        0x0
+ .iplt          0x20001144        0x0 /tmp/ccGdx2eb.o
+
+.igot.plt       0x20001144        0x0
+ .igot.plt      0x20001144        0x0 /tmp/ccGdx2eb.o
+
+.rel.dyn        0x20001144        0x0
+ .rel.iplt      0x20001144        0x0 /tmp/ccGdx2eb.o
+
+/DISCARD/
+ *(.ARM.exidx*)
+ *(.ARM.extab*)
+ *(.eh_frame*)
+ *(.comment)
+ *(.note.*)
+OUTPUT(sstv.elf elf32-littlearm)
+LOAD linker stubs
+
+.ARM.attributes
+                0x00000000       0x2c
+ .ARM.attributes
+                0x00000000       0x2c /tmp/ccGdx2eb.o

@@ -1,0 +1,100 @@
+Archive member included to satisfy reference by file (symbol)
+
+/opt/toolchain/bin/../lib/gcc/arm-none-eabi/13.3.1/thumb/v6-m/nofp/libgcc.a(_thumb1_case_uqi.o)
+                              /tmp/ccykcxok.o (__gnu_thumb1_case_uqi)
+
+Discarded input sections
+
+ .text          0x00000000        0x0 /tmp/ccykcxok.o
+ .data          0x00000000        0x0 /tmp/ccykcxok.o
+ .bss           0x00000000        0x0 /tmp/ccykcxok.o
+ .comment       0x00000000       0x46 /tmp/ccykcxok.o
+ .data          0x00000000        0x0 /opt/toolchain/bin/../lib/gcc/arm-none-eabi/13.3.1/thumb/v6-m/nofp/libgcc.a(_thumb1_case_uqi.o)
+ .bss           0x00000000        0x0 /opt/toolchain/bin/../lib/gcc/arm-none-eabi/13.3.1/thumb/v6-m/nofp/libgcc.a(_thumb1_case_uqi.o)
+
+Memory Configuration
+
+Name             Origin             Length             Attributes
+APP              0x20000280         0x00001000         xrw
+*default*        0x00000000         0xffffffff
+
+Linker script and memory map
+
+                0x20000280                        APP_VMA = 0x20000280
+LOAD /tmp/ccykcxok.o
+LOAD /opt/toolchain/bin/../lib/gcc/arm-none-eabi/13.3.1/thumb/v6-m/nofp/libgcc.a
+                0x20000280                        APP_VMA = DEFINED (APP_VMA)?APP_VMA:0x20000280
+                0x00001000                        APP_LENGTH = 0x1000
+
+.app            0x20000280      0x5f4
+ *(.text.entry)
+ .text.entry    0x20000280      0x574 /tmp/ccykcxok.o
+                0x20000280                app_main
+ *(.text .text.*)
+ .text.show_hud
+                0x200007f4       0x20 /tmp/ccykcxok.o
+ .text.put_text
+                0x20000814       0x30 /tmp/ccykcxok.o
+ .text          0x20000844       0x14 /opt/toolchain/bin/../lib/gcc/arm-none-eabi/13.3.1/thumb/v6-m/nofp/libgcc.a(_thumb1_case_uqi.o)
+                0x20000844                __gnu_thumb1_case_uqi
+ *(.rodata .rodata.*)
+ .rodata.centre_oy
+                0x20000858        0x3 /tmp/ccykcxok.o
+ .rodata.centre_ox
+                0x2000085b        0x3 /tmp/ccykcxok.o
+ .rodata.centre_ky
+                0x2000085e        0x3 /tmp/ccykcxok.o
+ .rodata.centre_kx
+                0x20000861        0x3 /tmp/ccykcxok.o
+                0x20000864                        . = ALIGN (0x4)
+ *(.data .data.*)
+                0x20000864                        . = ALIGN (0x4)
+                0x20000864                        __app_bss_start = .
+ *(.bss .bss.* COMMON)
+ .bss.g         0x20000864       0x10 /tmp/ccykcxok.o
+                0x20000874                        . = ALIGN (0x4)
+                0x20000874                        __app_bss_end = .
+                0x20000874                        __app_end = .
+                0x00000001                        ASSERT ((__app_end <= (APP_VMA + APP_LENGTH)), Plasma overlay app overflows the 4 KiB overlay)
+
+.glue_7         0x20000874        0x0
+ .glue_7        0x20000874        0x0 linker stubs
+
+.glue_7t        0x20000874        0x0
+ .glue_7t       0x20000874        0x0 linker stubs
+
+.vfp11_veneer   0x20000874        0x0
+ .vfp11_veneer  0x20000874        0x0 linker stubs
+
+.v4_bx          0x20000874        0x0
+ .v4_bx         0x20000874        0x0 linker stubs
+
+.iplt           0x20000874        0x0
+ .iplt          0x20000874        0x0 /tmp/ccykcxok.o
+
+.igot.plt       0x20000874        0x0
+ .igot.plt      0x20000874        0x0 /tmp/ccykcxok.o
+
+.rel.dyn        0x20000874        0x0
+ .rel.iplt      0x20000874        0x0 /tmp/ccykcxok.o
+
+/DISCARD/
+ *(.ARM.exidx*)
+ *(.ARM.extab*)
+ *(.eh_frame*)
+ *(.comment)
+ *(.note.*)
+OUTPUT(plasma.elf elf32-littlearm)
+LOAD linker stubs
+
+.ARM.attributes
+                0x00000000       0x2c
+ .ARM.attributes
+                0x00000000       0x2c /tmp/ccykcxok.o
+ .ARM.attributes
+                0x0000002c       0x1e /opt/toolchain/bin/../lib/gcc/arm-none-eabi/13.3.1/thumb/v6-m/nofp/libgcc.a(_thumb1_case_uqi.o)
+
+.debug_line_str
+                0x00000000       0xc6
+ .debug_line_str
+                0x00000000       0xc6 /opt/toolchain/bin/../lib/gcc/arm-none-eabi/13.3.1/thumb/v6-m/nofp/libgcc.a(_thumb1_case_uqi.o)

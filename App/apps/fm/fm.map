@@ -1,0 +1,105 @@
+Archive member included to satisfy reference by file (symbol)
+
+/opt/toolchain/bin/../lib/gcc/arm-none-eabi/13.3.1/thumb/v6-m/nofp/libgcc.a(_thumb1_case_uqi.o)
+                              /tmp/ccHr3Cwq.o (__gnu_thumb1_case_uqi)
+
+Discarded input sections
+
+ .text          0x00000000        0x0 /tmp/ccHr3Cwq.o
+ .data          0x00000000        0x0 /tmp/ccHr3Cwq.o
+ .bss           0x00000000        0x0 /tmp/ccHr3Cwq.o
+ .comment       0x00000000       0x46 /tmp/ccHr3Cwq.o
+ .data          0x00000000        0x0 /opt/toolchain/bin/../lib/gcc/arm-none-eabi/13.3.1/thumb/v6-m/nofp/libgcc.a(_thumb1_case_uqi.o)
+ .bss           0x00000000        0x0 /opt/toolchain/bin/../lib/gcc/arm-none-eabi/13.3.1/thumb/v6-m/nofp/libgcc.a(_thumb1_case_uqi.o)
+
+Memory Configuration
+
+Name             Origin             Length             Attributes
+APP              0x20000280         0x00001000         xrw
+*default*        0x00000000         0xffffffff
+
+Linker script and memory map
+
+                0x20000280                        APP_VMA = 0x20000280
+LOAD /tmp/ccHr3Cwq.o
+LOAD /opt/toolchain/bin/../lib/gcc/arm-none-eabi/13.3.1/thumb/v6-m/nofp/libgcc.a
+                0x20000280                        APP_VMA = DEFINED (APP_VMA)?APP_VMA:0x20000280
+                0x00001000                        APP_LENGTH = 0x1000
+
+.app            0x20000280      0x8c4
+ *(.text.entry)
+ .text.entry    0x20000280      0x434 /tmp/ccHr3Cwq.o
+                0x20000280                app_main
+ *(.text .text.*)
+ .text.putu     0x200006b4       0x54 /tmp/ccHr3Cwq.o
+ .text.put_t    0x20000708       0x28 /tmp/ccHr3Cwq.o
+ .text.bandLimits
+                0x20000730       0x24 /tmp/ccHr3Cwq.o
+ .text.tune     0x20000754       0x18 /tmp/ccHr3Cwq.o
+ .text.validCh  0x2000076c       0x24 /tmp/ccHr3Cwq.o
+ .text.findNext
+                0x20000790       0x36 /tmp/ccHr3Cwq.o
+ .text.num2     0x200007c6       0x12 /tmp/ccHr3Cwq.o
+ .text.scanTuneNext
+                0x200007d8       0x40 /tmp/ccHr3Cwq.o
+ .text.configChannel.isra.0
+                0x20000818       0x30 /tmp/ccHr3Cwq.o
+ .text.stopScan
+                0x20000848       0x30 /tmp/ccHr3Cwq.o
+ .text.func     0x20000878       0xa4 /tmp/ccHr3Cwq.o
+ .text.onShort  0x2000091c      0x1f0 /tmp/ccHr3Cwq.o
+ .text          0x20000b0c       0x14 /opt/toolchain/bin/../lib/gcc/arm-none-eabi/13.3.1/thumb/v6-m/nofp/libgcc.a(_thumb1_case_uqi.o)
+                0x20000b0c                __gnu_thumb1_case_uqi
+ *(.rodata .rodata.*)
+                0x20000b20                        . = ALIGN (0x4)
+ *(.data .data.*)
+                0x20000b20                        . = ALIGN (0x4)
+                0x20000b20                        __app_bss_start = .
+ *(.bss .bss.* COMMON)
+ .bss.g         0x20000b20       0x24 /tmp/ccHr3Cwq.o
+                0x20000b44                        . = ALIGN (0x4)
+                0x20000b44                        __app_bss_end = .
+                0x20000b44                        __app_end = .
+                0x00000001                        ASSERT ((__app_end <= (APP_VMA + APP_LENGTH)), Broadcast FM overlay app overflows the 4 KiB overlay)
+
+.glue_7         0x20000b44        0x0
+ .glue_7        0x20000b44        0x0 linker stubs
+
+.glue_7t        0x20000b44        0x0
+ .glue_7t       0x20000b44        0x0 linker stubs
+
+.vfp11_veneer   0x20000b44        0x0
+ .vfp11_veneer  0x20000b44        0x0 linker stubs
+
+.v4_bx          0x20000b44        0x0
+ .v4_bx         0x20000b44        0x0 linker stubs
+
+.iplt           0x20000b44        0x0
+ .iplt          0x20000b44        0x0 /tmp/ccHr3Cwq.o
+
+.igot.plt       0x20000b44        0x0
+ .igot.plt      0x20000b44        0x0 /tmp/ccHr3Cwq.o
+
+.rel.dyn        0x20000b44        0x0
+ .rel.iplt      0x20000b44        0x0 /tmp/ccHr3Cwq.o
+
+/DISCARD/
+ *(.ARM.exidx*)
+ *(.ARM.extab*)
+ *(.eh_frame*)
+ *(.comment)
+ *(.note.*)
+OUTPUT(fm.elf elf32-littlearm)
+LOAD linker stubs
+
+.ARM.attributes
+                0x00000000       0x2c
+ .ARM.attributes
+                0x00000000       0x2c /tmp/ccHr3Cwq.o
+ .ARM.attributes
+                0x0000002c       0x1e /opt/toolchain/bin/../lib/gcc/arm-none-eabi/13.3.1/thumb/v6-m/nofp/libgcc.a(_thumb1_case_uqi.o)
+
+.debug_line_str
+                0x00000000       0xc6
+ .debug_line_str
+                0x00000000       0xc6 /opt/toolchain/bin/../lib/gcc/arm-none-eabi/13.3.1/thumb/v6-m/nofp/libgcc.a(_thumb1_case_uqi.o)

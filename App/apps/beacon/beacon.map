@@ -1,0 +1,112 @@
+Archive member included to satisfy reference by file (symbol)
+
+/opt/toolchain/bin/../lib/gcc/arm-none-eabi/13.3.1/thumb/v6-m/nofp/libgcc.a(_thumb1_case_uqi.o)
+                              /tmp/ccGmpHHe.o (__gnu_thumb1_case_uqi)
+
+Discarded input sections
+
+ .text          0x00000000        0x0 /tmp/ccGmpHHe.o
+ .data          0x00000000        0x0 /tmp/ccGmpHHe.o
+ .bss           0x00000000        0x0 /tmp/ccGmpHHe.o
+ .comment       0x00000000       0x46 /tmp/ccGmpHHe.o
+ .data          0x00000000        0x0 /opt/toolchain/bin/../lib/gcc/arm-none-eabi/13.3.1/thumb/v6-m/nofp/libgcc.a(_thumb1_case_uqi.o)
+ .bss           0x00000000        0x0 /opt/toolchain/bin/../lib/gcc/arm-none-eabi/13.3.1/thumb/v6-m/nofp/libgcc.a(_thumb1_case_uqi.o)
+
+Memory Configuration
+
+Name             Origin             Length             Attributes
+APP              0x20000280         0x00001000         xrw
+*default*        0x00000000         0xffffffff
+
+Linker script and memory map
+
+                0x20000280                        APP_VMA = 0x20000280
+LOAD /tmp/ccGmpHHe.o
+LOAD /opt/toolchain/bin/../lib/gcc/arm-none-eabi/13.3.1/thumb/v6-m/nofp/libgcc.a
+                0x20000280                        APP_VMA = DEFINED (APP_VMA)?APP_VMA:0x20000280
+                0x00001000                        APP_LENGTH = 0x1000
+
+.app            0x20000280      0xa84
+ *(.text.entry)
+ .text.entry    0x20000280      0x350 /tmp/ccGmpHHe.o
+                0x20000280                app_main
+ *(.text .text.*)
+ .text.T        0x200005d0       0x1c /tmp/ccGmpHHe.o
+ .text.slen     0x200005ec       0x12 /tmp/ccGmpHHe.o
+ .text.put      0x200005fe       0x10 /tmp/ccGmpHHe.o
+ *fill*         0x2000060e        0x2 
+ .text.putu     0x20000610       0x54 /tmp/ccGmpHHe.o
+ .text.tag      0x20000664       0x30 /tmp/ccGmpHHe.o
+ .text.chrome   0x20000694       0xa0 /tmp/ccGmpHHe.o
+ .text.drawTxSeconds
+                0x20000734       0x94 /tmp/ccGmpHHe.o
+ .text.blit     0x200007c8       0x18 /tmp/ccGmpHHe.o
+ .text.tickDelay
+                0x200007e0       0x24 /tmp/ccGmpHHe.o
+ .text.lockTrack
+                0x20000804       0x44 /tmp/ccGmpHHe.o
+ .text.keyOff   0x20000848       0x24 /tmp/ccGmpHHe.o
+ .text.settingKey
+                0x2000086c       0x88 /tmp/ccGmpHHe.o
+ .text.drawMessage
+                0x200008f4      0x120 /tmp/ccGmpHHe.o
+ .text.updateProgress
+                0x20000a14       0x78 /tmp/ccGmpHHe.o
+ .text.beaconDraw
+                0x20000a8c      0x140 /tmp/ccGmpHHe.o
+ .text.txDelay  0x20000bcc       0xec /tmp/ccGmpHHe.o
+ .text          0x20000cb8       0x14 /opt/toolchain/bin/../lib/gcc/arm-none-eabi/13.3.1/thumb/v6-m/nofp/libgcc.a(_thumb1_case_uqi.o)
+                0x20000cb8                __gnu_thumb1_case_uqi
+ *(.rodata .rodata.*)
+                0x20000ccc                        . = ALIGN (0x4)
+ *(.data .data.*)
+                0x20000ccc                        . = ALIGN (0x4)
+                0x20000ccc                        __app_bss_start = .
+ *(.bss .bss.* COMMON)
+ .bss.g         0x20000ccc       0x38 /tmp/ccGmpHHe.o
+                0x20000d04                        . = ALIGN (0x4)
+                0x20000d04                        __app_bss_end = .
+                0x20000d04                        __app_end = .
+                0x00000001                        ASSERT ((__app_end <= (APP_VMA + APP_LENGTH)), Beacon overlay app overflows the 4 KiB overlay)
+
+.glue_7         0x20000d04        0x0
+ .glue_7        0x20000d04        0x0 linker stubs
+
+.glue_7t        0x20000d04        0x0
+ .glue_7t       0x20000d04        0x0 linker stubs
+
+.vfp11_veneer   0x20000d04        0x0
+ .vfp11_veneer  0x20000d04        0x0 linker stubs
+
+.v4_bx          0x20000d04        0x0
+ .v4_bx         0x20000d04        0x0 linker stubs
+
+.iplt           0x20000d04        0x0
+ .iplt          0x20000d04        0x0 /tmp/ccGmpHHe.o
+
+.igot.plt       0x20000d04        0x0
+ .igot.plt      0x20000d04        0x0 /tmp/ccGmpHHe.o
+
+.rel.dyn        0x20000d04        0x0
+ .rel.iplt      0x20000d04        0x0 /tmp/ccGmpHHe.o
+
+/DISCARD/
+ *(.ARM.exidx*)
+ *(.ARM.extab*)
+ *(.eh_frame*)
+ *(.comment)
+ *(.note.*)
+OUTPUT(beacon.elf elf32-littlearm)
+LOAD linker stubs
+
+.ARM.attributes
+                0x00000000       0x2c
+ .ARM.attributes
+                0x00000000       0x2c /tmp/ccGmpHHe.o
+ .ARM.attributes
+                0x0000002c       0x1e /opt/toolchain/bin/../lib/gcc/arm-none-eabi/13.3.1/thumb/v6-m/nofp/libgcc.a(_thumb1_case_uqi.o)
+
+.debug_line_str
+                0x00000000       0xc6
+ .debug_line_str
+                0x00000000       0xc6 /opt/toolchain/bin/../lib/gcc/arm-none-eabi/13.3.1/thumb/v6-m/nofp/libgcc.a(_thumb1_case_uqi.o)

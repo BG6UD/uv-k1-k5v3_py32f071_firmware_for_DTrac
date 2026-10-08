@@ -1,0 +1,98 @@
+
+Discarded input sections
+
+ .text          0x00000000        0x0 /tmp/ccLZqzFy.o
+ .data          0x00000000        0x0 /tmp/ccLZqzFy.o
+ .bss           0x00000000        0x0 /tmp/ccLZqzFy.o
+ .comment       0x00000000       0x46 /tmp/ccLZqzFy.o
+
+Memory Configuration
+
+Name             Origin             Length             Attributes
+APP              0x20000280         0x00001000         xrw
+*default*        0x00000000         0xffffffff
+
+Linker script and memory map
+
+                0x20000280                        APP_VMA = 0x20000280
+LOAD /tmp/ccLZqzFy.o
+LOAD /opt/toolchain/bin/../lib/gcc/arm-none-eabi/13.3.1/thumb/v6-m/nofp/libgcc.a
+                0x20000280                        APP_VMA = DEFINED (APP_VMA)?APP_VMA:0x20000280
+                0x00001000                        APP_LENGTH = 0x1000
+
+.app            0x20000280      0xfc8
+ *(.text.entry)
+ .text.entry    0x20000280      0x4e4 /tmp/ccLZqzFy.o
+                0x20000280                app_main
+ *(.text .text.*)
+ .text.put      0x20000764       0x10 /tmp/ccLZqzFy.o
+ .text.tiny     0x20000774       0x24 /tmp/ccLZqzFy.o
+ .text.emit     0x20000798       0x8c /tmp/ccLZqzFy.o
+ .text.clkCyc   0x20000824       0x30 /tmp/ccLZqzFy.o
+ .text.setTone  0x20000854       0x54 /tmp/ccLZqzFy.o
+ .text.sendBit  0x200008a8       0x34 /tmp/ccLZqzFy.o
+ .text.editRow  0x200008dc       0xd0 /tmp/ccLZqzFy.o
+ .text.fieldRow.constprop.0
+                0x200009ac       0x50 /tmp/ccLZqzFy.o
+ .text.posOk.constprop.0
+                0x200009fc       0xc4 /tmp/ccLZqzFy.o
+ .text.drawSymbol.constprop.0
+                0x20000ac0       0x38 /tmp/ccLZqzFy.o
+ .text.puti     0x20000af8       0x4c /tmp/ccLZqzFy.o
+ .text.putCall  0x20000b44       0x2e /tmp/ccLZqzFy.o
+ *fill*         0x20000b72        0x2 
+ .text.build    0x20000b74      0x1d0 /tmp/ccLZqzFy.o
+ .text.memset   0x20000d44       0x10 /tmp/ccLZqzFy.o
+                0x20000d44                memset
+ .text.draw     0x20000d54      0x468 /tmp/ccLZqzFy.o
+ .text.memcpy   0x200011bc       0x12 /tmp/ccLZqzFy.o
+                0x200011bc                memcpy
+ *(.rodata .rodata.*)
+ .rodata.P10    0x200011ce        0xa /tmp/ccLZqzFy.o
+                0x200011d8                        . = ALIGN (0x4)
+ *(.data .data.*)
+                0x200011d8                        . = ALIGN (0x4)
+                0x200011d8                        __app_bss_start = .
+ *(.bss .bss.* COMMON)
+ .bss.str       0x200011d8       0x22 /tmp/ccLZqzFy.o
+ *fill*         0x200011fa        0x2 
+ .bss.g         0x200011fc       0x4c /tmp/ccLZqzFy.o
+                0x20001248                        . = ALIGN (0x4)
+                0x20001248                        __app_bss_end = .
+                0x20001248                        __app_end = .
+                0x00000001                        ASSERT ((__app_end <= (APP_VMA + APP_LENGTH)), APRS TX overlay app overflows the 4 KiB overlay)
+
+.glue_7         0x20001248        0x0
+ .glue_7        0x20001248        0x0 linker stubs
+
+.glue_7t        0x20001248        0x0
+ .glue_7t       0x20001248        0x0 linker stubs
+
+.vfp11_veneer   0x20001248        0x0
+ .vfp11_veneer  0x20001248        0x0 linker stubs
+
+.v4_bx          0x20001248        0x0
+ .v4_bx         0x20001248        0x0 linker stubs
+
+.iplt           0x20001248        0x0
+ .iplt          0x20001248        0x0 /tmp/ccLZqzFy.o
+
+.igot.plt       0x20001248        0x0
+ .igot.plt      0x20001248        0x0 /tmp/ccLZqzFy.o
+
+.rel.dyn        0x20001248        0x0
+ .rel.iplt      0x20001248        0x0 /tmp/ccLZqzFy.o
+
+/DISCARD/
+ *(.ARM.exidx*)
+ *(.ARM.extab*)
+ *(.eh_frame*)
+ *(.comment)
+ *(.note.*)
+OUTPUT(aprstx.elf elf32-littlearm)
+LOAD linker stubs
+
+.ARM.attributes
+                0x00000000       0x2c
+ .ARM.attributes
+                0x00000000       0x2c /tmp/ccLZqzFy.o

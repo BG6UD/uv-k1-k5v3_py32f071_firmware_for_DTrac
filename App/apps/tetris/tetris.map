@@ -1,0 +1,99 @@
+
+Discarded input sections
+
+ .text          0x00000000        0x0 /tmp/ccB22TfK.o
+ .data          0x00000000        0x0 /tmp/ccB22TfK.o
+ .bss           0x00000000        0x0 /tmp/ccB22TfK.o
+ .comment       0x00000000       0x46 /tmp/ccB22TfK.o
+
+Memory Configuration
+
+Name             Origin             Length             Attributes
+APP              0x20000280         0x00001000         xrw
+*default*        0x00000000         0xffffffff
+
+Linker script and memory map
+
+                0x20000280                        APP_VMA = 0x20000280
+LOAD /tmp/ccB22TfK.o
+LOAD /opt/toolchain/bin/../lib/gcc/arm-none-eabi/13.3.1/thumb/v6-m/nofp/libgcc.a
+                0x20000280                        APP_VMA = DEFINED (APP_VMA)?APP_VMA:0x20000280
+                0x00001000                        APP_LENGTH = 0x1000
+
+.app            0x20000280      0xa4c
+ *(.text.entry)
+ .text.entry    0x20000280      0x1ac /tmp/ccB22TfK.o
+                0x20000280                app_main
+ *(.text .text.*)
+ .text.mask_of  0x2000042c       0x28 /tmp/ccB22TfK.o
+ .text.take_piece
+                0x20000454       0x60 /tmp/ccB22TfK.o
+ .text.set_pixel
+                0x200004b4       0x40 /tmp/ccB22TfK.o
+ .text.cell     0x200004f4       0x76 /tmp/ccB22TfK.o
+ *fill*         0x2000056a        0x2 
+ .text.collision
+                0x2000056c       0x5c /tmp/ccB22TfK.o
+ .text.draw_piece
+                0x200005c8       0x44 /tmp/ccB22TfK.o
+ .text.render   0x2000060c      0x2d0 /tmp/ccB22TfK.o
+ .text.update_best
+                0x200008dc       0x18 /tmp/ccB22TfK.o
+ .text.spawn_piece
+                0x200008f4       0x34 /tmp/ccB22TfK.o
+ .text.lock_piece
+                0x20000928      0x18c /tmp/ccB22TfK.o
+ .text.move_down.isra.0
+                0x20000ab4       0x38 /tmp/ccB22TfK.o
+ .text.memset   0x20000aec       0x10 /tmp/ccB22TfK.o
+                0x20000aec                memset
+ .text.new_game
+                0x20000afc       0x2c /tmp/ccB22TfK.o
+ .text.key_action
+                0x20000b28      0x14c /tmp/ccB22TfK.o
+ *(.rodata .rodata.*)
+                0x20000c74                        . = ALIGN (0x4)
+ *(.data .data.*)
+                0x20000c74                        . = ALIGN (0x4)
+                0x20000c74                        __app_bss_start = .
+ *(.bss .bss.* COMMON)
+ .bss.g         0x20000c74       0x58 /tmp/ccB22TfK.o
+                0x20000ccc                        . = ALIGN (0x4)
+                0x20000ccc                        __app_bss_end = .
+                0x20000ccc                        __app_end = .
+                0x00000001                        ASSERT ((__app_end <= (APP_VMA + APP_LENGTH)), Tetris overlay app overflows the 4 KiB overlay)
+
+.glue_7         0x20000ccc        0x0
+ .glue_7        0x20000ccc        0x0 linker stubs
+
+.glue_7t        0x20000ccc        0x0
+ .glue_7t       0x20000ccc        0x0 linker stubs
+
+.vfp11_veneer   0x20000ccc        0x0
+ .vfp11_veneer  0x20000ccc        0x0 linker stubs
+
+.v4_bx          0x20000ccc        0x0
+ .v4_bx         0x20000ccc        0x0 linker stubs
+
+.iplt           0x20000ccc        0x0
+ .iplt          0x20000ccc        0x0 /tmp/ccB22TfK.o
+
+.igot.plt       0x20000ccc        0x0
+ .igot.plt      0x20000ccc        0x0 /tmp/ccB22TfK.o
+
+.rel.dyn        0x20000ccc        0x0
+ .rel.iplt      0x20000ccc        0x0 /tmp/ccB22TfK.o
+
+/DISCARD/
+ *(.ARM.exidx*)
+ *(.ARM.extab*)
+ *(.eh_frame*)
+ *(.comment)
+ *(.note.*)
+OUTPUT(tetris.elf elf32-littlearm)
+LOAD linker stubs
+
+.ARM.attributes
+                0x00000000       0x2c
+ .ARM.attributes
+                0x00000000       0x2c /tmp/ccB22TfK.o

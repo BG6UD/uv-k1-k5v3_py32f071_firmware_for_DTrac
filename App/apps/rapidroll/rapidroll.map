@@ -1,0 +1,86 @@
+
+Discarded input sections
+
+ .text          0x00000000        0x0 /tmp/ccqPrufE.o
+ .data          0x00000000        0x0 /tmp/ccqPrufE.o
+ .bss           0x00000000        0x0 /tmp/ccqPrufE.o
+ .comment       0x00000000       0x46 /tmp/ccqPrufE.o
+
+Memory Configuration
+
+Name             Origin             Length             Attributes
+APP              0x20000280         0x00001000         xrw
+*default*        0x00000000         0xffffffff
+
+Linker script and memory map
+
+                0x20000280                        APP_VMA = 0x20000280
+LOAD /tmp/ccqPrufE.o
+LOAD /opt/toolchain/bin/../lib/gcc/arm-none-eabi/13.3.1/thumb/v6-m/nofp/libgcc.a
+                0x20000280                        APP_VMA = DEFINED (APP_VMA)?APP_VMA:0x20000280
+                0x00001000                        APP_LENGTH = 0x1000
+
+.app            0x20000280      0x91c
+ *(.text.entry)
+ .text.entry    0x20000280      0x5f0 /tmp/ccqPrufE.o
+                0x20000280                app_main
+ *(.text .text.*)
+ .text.rnd      0x20000870       0x14 /tmp/ccqPrufE.o
+ .text.pixel    0x20000884       0x40 /tmp/ccqPrufE.o
+ .text.column   0x200008c4       0x22 /tmp/ccqPrufE.o
+ *fill*         0x200008e6        0x2 
+ .text.blit     0x200008e8       0x38 /tmp/ccqPrufE.o
+ .text.say      0x20000920       0x2c /tmp/ccqPrufE.o
+ .text.hud_number
+                0x2000094c       0x74 /tmp/ccqPrufE.o
+ .text.spawn_row
+                0x200009c0      0x13c /tmp/ccqPrufE.o
+ .text.die      0x20000afc       0x44 /tmp/ccqPrufE.o
+ .text.memset   0x20000b40       0x10 /tmp/ccqPrufE.o
+                0x20000b40                memset
+ *(.rodata .rodata.*)
+                0x20000b50                        . = ALIGN (0x4)
+ *(.data .data.*)
+                0x20000b50                        . = ALIGN (0x4)
+                0x20000b50                        __app_bss_start = .
+ *(.bss .bss.* COMMON)
+ .bss.g         0x20000b50       0x4c /tmp/ccqPrufE.o
+                0x20000b9c                        . = ALIGN (0x4)
+                0x20000b9c                        __app_bss_end = .
+                0x20000b9c                        __app_end = .
+                0x00000001                        ASSERT ((__app_end <= (APP_VMA + APP_LENGTH)), Rapid Roll overlay app overflows the 4 KiB overlay)
+
+.glue_7         0x20000b9c        0x0
+ .glue_7        0x20000b9c        0x0 linker stubs
+
+.glue_7t        0x20000b9c        0x0
+ .glue_7t       0x20000b9c        0x0 linker stubs
+
+.vfp11_veneer   0x20000b9c        0x0
+ .vfp11_veneer  0x20000b9c        0x0 linker stubs
+
+.v4_bx          0x20000b9c        0x0
+ .v4_bx         0x20000b9c        0x0 linker stubs
+
+.iplt           0x20000b9c        0x0
+ .iplt          0x20000b9c        0x0 /tmp/ccqPrufE.o
+
+.igot.plt       0x20000b9c        0x0
+ .igot.plt      0x20000b9c        0x0 /tmp/ccqPrufE.o
+
+.rel.dyn        0x20000b9c        0x0
+ .rel.iplt      0x20000b9c        0x0 /tmp/ccqPrufE.o
+
+/DISCARD/
+ *(.ARM.exidx*)
+ *(.ARM.extab*)
+ *(.eh_frame*)
+ *(.comment)
+ *(.note.*)
+OUTPUT(rapidroll.elf elf32-littlearm)
+LOAD linker stubs
+
+.ARM.attributes
+                0x00000000       0x2c
+ .ARM.attributes
+                0x00000000       0x2c /tmp/ccqPrufE.o

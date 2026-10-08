@@ -1,0 +1,111 @@
+Archive member included to satisfy reference by file (symbol)
+
+/opt/toolchain/bin/../lib/gcc/arm-none-eabi/13.3.1/thumb/v6-m/nofp/libgcc.a(_thumb1_case_uhi.o)
+                              /tmp/ccaekzmI.o (__gnu_thumb1_case_uhi)
+
+Discarded input sections
+
+ .text          0x00000000        0x0 /tmp/ccaekzmI.o
+ .data          0x00000000        0x0 /tmp/ccaekzmI.o
+ .bss           0x00000000        0x0 /tmp/ccaekzmI.o
+ .comment       0x00000000       0x46 /tmp/ccaekzmI.o
+ .data          0x00000000        0x0 /opt/toolchain/bin/../lib/gcc/arm-none-eabi/13.3.1/thumb/v6-m/nofp/libgcc.a(_thumb1_case_uhi.o)
+ .bss           0x00000000        0x0 /opt/toolchain/bin/../lib/gcc/arm-none-eabi/13.3.1/thumb/v6-m/nofp/libgcc.a(_thumb1_case_uhi.o)
+
+Memory Configuration
+
+Name             Origin             Length             Attributes
+APP              0x20000280         0x00001000         xrw
+*default*        0x00000000         0xffffffff
+
+Linker script and memory map
+
+                0x20000280                        APP_VMA = 0x20000280
+LOAD /tmp/ccaekzmI.o
+LOAD /opt/toolchain/bin/../lib/gcc/arm-none-eabi/13.3.1/thumb/v6-m/nofp/libgcc.a
+                0x20000280                        APP_VMA = DEFINED (APP_VMA)?APP_VMA:0x20000280
+                0x00001000                        APP_LENGTH = 0x1000
+
+.app            0x20000280      0x9b0
+ *(.text.entry)
+ .text.entry    0x20000280      0x6d8 /tmp/ccaekzmI.o
+                0x20000280                app_main
+ *(.text .text.*)
+ .text.sin8     0x20000958       0x24 /tmp/ccaekzmI.o
+ .text.draw_edge
+                0x2000097c       0xe4 /tmp/ccaekzmI.o
+ .text.globe_edge
+                0x20000a60       0x3e /tmp/ccaekzmI.o
+ *fill*         0x20000a9e        0x2 
+ .text.project_point
+                0x20000aa0       0xf8 /tmp/ccaekzmI.o
+ .text.globe_point
+                0x20000b98       0x58 /tmp/ccaekzmI.o
+ .text          0x20000bf0       0x14 /opt/toolchain/bin/../lib/gcc/arm-none-eabi/13.3.1/thumb/v6-m/nofp/libgcc.a(_thumb1_case_uhi.o)
+                0x20000bf0                __gnu_thumb1_case_uhi
+ *(.rodata .rodata.*)
+ .rodata.entry.cst1
+                0x20000c04        0x1 /tmp/ccaekzmI.o
+                0x20000c08                        . = ALIGN (0x4)
+ *fill*         0x20000c05        0x3 
+ *(.data .data.*)
+                0x20000c08                        . = ALIGN (0x4)
+                0x20000c08                        __app_bss_start = .
+ *(.bss .bss.* COMMON)
+ .bss.zoomq     0x20000c08        0x1 /tmp/ccaekzmI.o
+ *fill*         0x20000c09        0x3 
+ .bss.rsz       0x20000c0c        0x4 /tmp/ccaekzmI.o
+ .bss.rcz       0x20000c10        0x4 /tmp/ccaekzmI.o
+ .bss.rsy       0x20000c14        0x4 /tmp/ccaekzmI.o
+ .bss.rcy       0x20000c18        0x4 /tmp/ccaekzmI.o
+ .bss.rsx       0x20000c1c        0x4 /tmp/ccaekzmI.o
+ .bss.rcx       0x20000c20        0x4 /tmp/ccaekzmI.o
+ .bss.recipq    0x20000c24        0x4 /tmp/ccaekzmI.o
+ .bss.sinq      0x20000c28        0x4 /tmp/ccaekzmI.o
+ .bss.A         0x20000c2c        0x4 /tmp/ccaekzmI.o
+                0x20000c30                        . = ALIGN (0x4)
+                0x20000c30                        __app_bss_end = .
+                0x20000c30                        __app_end = .
+                0x00000001                        ASSERT ((__app_end <= (APP_VMA + APP_LENGTH)), Cube3D overlay app overflows the 4 KiB overlay)
+
+.glue_7         0x20000c30        0x0
+ .glue_7        0x20000c30        0x0 linker stubs
+
+.glue_7t        0x20000c30        0x0
+ .glue_7t       0x20000c30        0x0 linker stubs
+
+.vfp11_veneer   0x20000c30        0x0
+ .vfp11_veneer  0x20000c30        0x0 linker stubs
+
+.v4_bx          0x20000c30        0x0
+ .v4_bx         0x20000c30        0x0 linker stubs
+
+.iplt           0x20000c30        0x0
+ .iplt          0x20000c30        0x0 /tmp/ccaekzmI.o
+
+.igot.plt       0x20000c30        0x0
+ .igot.plt      0x20000c30        0x0 /tmp/ccaekzmI.o
+
+.rel.dyn        0x20000c30        0x0
+ .rel.iplt      0x20000c30        0x0 /tmp/ccaekzmI.o
+
+/DISCARD/
+ *(.ARM.exidx*)
+ *(.ARM.extab*)
+ *(.eh_frame*)
+ *(.comment)
+ *(.note.*)
+OUTPUT(cube3d.elf elf32-littlearm)
+LOAD linker stubs
+
+.ARM.attributes
+                0x00000000       0x2c
+ .ARM.attributes
+                0x00000000       0x2c /tmp/ccaekzmI.o
+ .ARM.attributes
+                0x0000002c       0x1e /opt/toolchain/bin/../lib/gcc/arm-none-eabi/13.3.1/thumb/v6-m/nofp/libgcc.a(_thumb1_case_uhi.o)
+
+.debug_line_str
+                0x00000000       0xc6
+ .debug_line_str
+                0x00000000       0xc6 /opt/toolchain/bin/../lib/gcc/arm-none-eabi/13.3.1/thumb/v6-m/nofp/libgcc.a(_thumb1_case_uhi.o)

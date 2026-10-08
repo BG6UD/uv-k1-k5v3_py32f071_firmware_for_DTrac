@@ -1,0 +1,82 @@
+
+Discarded input sections
+
+ .text          0x00000000        0x0 /tmp/ccYEGr02.o
+ .data          0x00000000        0x0 /tmp/ccYEGr02.o
+ .bss           0x00000000        0x0 /tmp/ccYEGr02.o
+ .comment       0x00000000       0x46 /tmp/ccYEGr02.o
+
+Memory Configuration
+
+Name             Origin             Length             Attributes
+APP              0x20000280         0x00001000         xrw
+*default*        0x00000000         0xffffffff
+
+Linker script and memory map
+
+                0x20000280                        APP_VMA = 0x20000280
+LOAD /tmp/ccYEGr02.o
+LOAD /opt/toolchain/bin/../lib/gcc/arm-none-eabi/13.3.1/thumb/v6-m/nofp/libgcc.a
+                0x20000280                        APP_VMA = DEFINED (APP_VMA)?APP_VMA:0x20000280
+                0x00001000                        APP_LENGTH = 0x1000
+
+.app            0x20000280      0x6d8
+ *(.text.entry)
+ .text.entry    0x20000280      0x314 /tmp/ccYEGr02.o
+                0x20000280                app_main
+ *(.text .text.*)
+ .text.tally    0x20000594       0x88 /tmp/ccYEGr02.o
+ .text.put_tile
+                0x2000061c       0x2c /tmp/ccYEGr02.o
+ .text.status_text
+                0x20000648       0x2c /tmp/ccYEGr02.o
+ .text.memset   0x20000674       0x10 /tmp/ccYEGr02.o
+                0x20000674                memset
+ .text.key_action
+                0x20000684      0x268 /tmp/ccYEGr02.o
+ *(.rodata .rodata.*)
+                0x200008ec                        . = ALIGN (0x4)
+ *(.data .data.*)
+                0x200008ec                        . = ALIGN (0x4)
+                0x200008ec                        __app_bss_start = .
+ *(.bss .bss.* COMMON)
+ .bss.g         0x200008ec       0x6c /tmp/ccYEGr02.o
+                0x20000958                        . = ALIGN (0x4)
+                0x20000958                        __app_bss_end = .
+                0x20000958                        __app_end = .
+                0x00000001                        ASSERT ((__app_end <= (APP_VMA + APP_LENGTH)), Minesweeper overlay app overflows the 4 KiB overlay)
+
+.glue_7         0x20000958        0x0
+ .glue_7        0x20000958        0x0 linker stubs
+
+.glue_7t        0x20000958        0x0
+ .glue_7t       0x20000958        0x0 linker stubs
+
+.vfp11_veneer   0x20000958        0x0
+ .vfp11_veneer  0x20000958        0x0 linker stubs
+
+.v4_bx          0x20000958        0x0
+ .v4_bx         0x20000958        0x0 linker stubs
+
+.iplt           0x20000958        0x0
+ .iplt          0x20000958        0x0 /tmp/ccYEGr02.o
+
+.igot.plt       0x20000958        0x0
+ .igot.plt      0x20000958        0x0 /tmp/ccYEGr02.o
+
+.rel.dyn        0x20000958        0x0
+ .rel.iplt      0x20000958        0x0 /tmp/ccYEGr02.o
+
+/DISCARD/
+ *(.ARM.exidx*)
+ *(.ARM.extab*)
+ *(.eh_frame*)
+ *(.comment)
+ *(.note.*)
+OUTPUT(minesweeper.elf elf32-littlearm)
+LOAD linker stubs
+
+.ARM.attributes
+                0x00000000       0x2c
+ .ARM.attributes
+                0x00000000       0x2c /tmp/ccYEGr02.o

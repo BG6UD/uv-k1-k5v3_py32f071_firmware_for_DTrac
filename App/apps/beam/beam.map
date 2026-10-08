@@ -1,0 +1,95 @@
+Archive member included to satisfy reference by file (symbol)
+
+/opt/toolchain/bin/../lib/gcc/arm-none-eabi/13.3.1/thumb/v6-m/nofp/libgcc.a(_thumb1_case_shi.o)
+                              /tmp/ccbUJ3Yq.o (__gnu_thumb1_case_shi)
+
+Discarded input sections
+
+ .text          0x00000000        0x0 /tmp/ccbUJ3Yq.o
+ .data          0x00000000        0x0 /tmp/ccbUJ3Yq.o
+ .bss           0x00000000        0x0 /tmp/ccbUJ3Yq.o
+ .comment       0x00000000       0x46 /tmp/ccbUJ3Yq.o
+ .data          0x00000000        0x0 /opt/toolchain/bin/../lib/gcc/arm-none-eabi/13.3.1/thumb/v6-m/nofp/libgcc.a(_thumb1_case_shi.o)
+ .bss           0x00000000        0x0 /opt/toolchain/bin/../lib/gcc/arm-none-eabi/13.3.1/thumb/v6-m/nofp/libgcc.a(_thumb1_case_shi.o)
+
+Memory Configuration
+
+Name             Origin             Length             Attributes
+APP              0x20000280         0x00001000         xrw
+*default*        0x00000000         0xffffffff
+
+Linker script and memory map
+
+                0x20000280                        APP_VMA = 0x20000280
+LOAD /tmp/ccbUJ3Yq.o
+LOAD /opt/toolchain/bin/../lib/gcc/arm-none-eabi/13.3.1/thumb/v6-m/nofp/libgcc.a
+                0x20000280                        APP_VMA = DEFINED (APP_VMA)?APP_VMA:0x20000280
+                0x00001000                        APP_LENGTH = 0x1000
+
+.app            0x20000280      0x448
+ *(.text.entry)
+ .text.entry    0x20000280      0x310 /tmp/ccbUJ3Yq.o
+                0x20000280                app_main
+ *(.text .text.*)
+ .text.obfuscate
+                0x20000590       0x3c /tmp/ccbUJ3Yq.o
+ .text.bk_seq   0x200005cc       0x48 /tmp/ccbUJ3Yq.o
+ .text.draw     0x20000614       0x3c /tmp/ccbUJ3Yq.o
+ .text.stop_rx  0x20000650       0x1c /tmp/ccbUJ3Yq.o
+ .text.crc16.constprop.0
+                0x2000066c       0x38 /tmp/ccbUJ3Yq.o
+ .text          0x200006a4       0x14 /opt/toolchain/bin/../lib/gcc/arm-none-eabi/13.3.1/thumb/v6-m/nofp/libgcc.a(_thumb1_case_shi.o)
+                0x200006a4                __gnu_thumb1_case_shi
+ *(.rodata .rodata.*)
+                0x200006b8                        . = ALIGN (0x4)
+ *(.data .data.*)
+                0x200006b8                        . = ALIGN (0x4)
+                0x200006b8                        __app_bss_start = .
+ *(.bss .bss.* COMMON)
+ .bss.g         0x200006b8       0x10 /tmp/ccbUJ3Yq.o
+                0x200006c8                        . = ALIGN (0x4)
+                0x200006c8                        __app_bss_end = .
+                0x200006c8                        __app_end = .
+                0x00000001                        ASSERT ((__app_end <= (APP_VMA + APP_LENGTH)), BEAM overlay app overflows the 4 KiB overlay)
+
+.glue_7         0x200006c8        0x0
+ .glue_7        0x200006c8        0x0 linker stubs
+
+.glue_7t        0x200006c8        0x0
+ .glue_7t       0x200006c8        0x0 linker stubs
+
+.vfp11_veneer   0x200006c8        0x0
+ .vfp11_veneer  0x200006c8        0x0 linker stubs
+
+.v4_bx          0x200006c8        0x0
+ .v4_bx         0x200006c8        0x0 linker stubs
+
+.iplt           0x200006c8        0x0
+ .iplt          0x200006c8        0x0 /tmp/ccbUJ3Yq.o
+
+.igot.plt       0x200006c8        0x0
+ .igot.plt      0x200006c8        0x0 /tmp/ccbUJ3Yq.o
+
+.rel.dyn        0x200006c8        0x0
+ .rel.iplt      0x200006c8        0x0 /tmp/ccbUJ3Yq.o
+
+/DISCARD/
+ *(.ARM.exidx*)
+ *(.ARM.extab*)
+ *(.eh_frame*)
+ *(.comment)
+ *(.note.*)
+OUTPUT(beam.elf elf32-littlearm)
+LOAD linker stubs
+
+.ARM.attributes
+                0x00000000       0x2c
+ .ARM.attributes
+                0x00000000       0x2c /tmp/ccbUJ3Yq.o
+ .ARM.attributes
+                0x0000002c       0x1e /opt/toolchain/bin/../lib/gcc/arm-none-eabi/13.3.1/thumb/v6-m/nofp/libgcc.a(_thumb1_case_shi.o)
+
+.debug_line_str
+                0x00000000       0xc6
+ .debug_line_str
+                0x00000000       0xc6 /opt/toolchain/bin/../lib/gcc/arm-none-eabi/13.3.1/thumb/v6-m/nofp/libgcc.a(_thumb1_case_shi.o)

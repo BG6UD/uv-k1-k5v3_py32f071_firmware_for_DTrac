@@ -1,0 +1,126 @@
+Archive member included to satisfy reference by file (symbol)
+
+/opt/toolchain/bin/../lib/gcc/arm-none-eabi/13.3.1/thumb/v6-m/nofp/libgcc.a(_udivsi3.o)
+                              /tmp/cc6umyhp.o (__aeabi_uidiv)
+/opt/toolchain/bin/../lib/gcc/arm-none-eabi/13.3.1/thumb/v6-m/nofp/libgcc.a(_dvmd_tls.o)
+                              /opt/toolchain/bin/../lib/gcc/arm-none-eabi/13.3.1/thumb/v6-m/nofp/libgcc.a(_udivsi3.o) (__aeabi_idiv0)
+
+Discarded input sections
+
+ .text          0x00000000        0x0 /tmp/cc6umyhp.o
+ .data          0x00000000        0x0 /tmp/cc6umyhp.o
+ .bss           0x00000000        0x0 /tmp/cc6umyhp.o
+ .comment       0x00000000       0x46 /tmp/cc6umyhp.o
+ .text          0x00000000      0x114 /opt/toolchain/bin/../lib/gcc/arm-none-eabi/13.3.1/thumb/v6-m/nofp/libgcc.a(_udivsi3.o)
+ .data          0x00000000        0x0 /opt/toolchain/bin/../lib/gcc/arm-none-eabi/13.3.1/thumb/v6-m/nofp/libgcc.a(_udivsi3.o)
+ .bss           0x00000000        0x0 /opt/toolchain/bin/../lib/gcc/arm-none-eabi/13.3.1/thumb/v6-m/nofp/libgcc.a(_udivsi3.o)
+ .debug_frame   0x00000000       0x20 /opt/toolchain/bin/../lib/gcc/arm-none-eabi/13.3.1/thumb/v6-m/nofp/libgcc.a(_udivsi3.o)
+ .debug_line_str
+                0x00000000       0xc6 /opt/toolchain/bin/../lib/gcc/arm-none-eabi/13.3.1/thumb/v6-m/nofp/libgcc.a(_udivsi3.o)
+ .ARM.attributes
+                0x00000000       0x1e /opt/toolchain/bin/../lib/gcc/arm-none-eabi/13.3.1/thumb/v6-m/nofp/libgcc.a(_udivsi3.o)
+ .text          0x00000000        0x4 /opt/toolchain/bin/../lib/gcc/arm-none-eabi/13.3.1/thumb/v6-m/nofp/libgcc.a(_dvmd_tls.o)
+ .data          0x00000000        0x0 /opt/toolchain/bin/../lib/gcc/arm-none-eabi/13.3.1/thumb/v6-m/nofp/libgcc.a(_dvmd_tls.o)
+ .bss           0x00000000        0x0 /opt/toolchain/bin/../lib/gcc/arm-none-eabi/13.3.1/thumb/v6-m/nofp/libgcc.a(_dvmd_tls.o)
+ .debug_line_str
+                0x00000000       0xc6 /opt/toolchain/bin/../lib/gcc/arm-none-eabi/13.3.1/thumb/v6-m/nofp/libgcc.a(_dvmd_tls.o)
+ .ARM.attributes
+                0x00000000       0x1e /opt/toolchain/bin/../lib/gcc/arm-none-eabi/13.3.1/thumb/v6-m/nofp/libgcc.a(_dvmd_tls.o)
+
+Memory Configuration
+
+Name             Origin             Length             Attributes
+APP              0x20000280         0x00001000         xrw
+*default*        0x00000000         0xffffffff
+
+Linker script and memory map
+
+                0x20000280                        APP_VMA = 0x20000280
+LOAD /tmp/cc6umyhp.o
+LOAD /opt/toolchain/bin/../lib/gcc/arm-none-eabi/13.3.1/thumb/v6-m/nofp/libgcc.a
+                0x20000280                        APP_VMA = DEFINED (APP_VMA)?APP_VMA:0x20000280
+                0x00001000                        APP_LENGTH = 0x1000
+
+.app            0x20000280      0xf10
+ *(.text.entry)
+ .text.entry    0x20000280      0x44c /tmp/cc6umyhp.o
+                0x20000280                app_main
+ *(.text .text.*)
+ .text.asset    0x200006cc       0x14 /tmp/cc6umyhp.o
+ .text.tune     0x200006e0       0x28 /tmp/cc6umyhp.o
+ .text.measure  0x20000708       0x50 /tmp/cc6umyhp.o
+ .text.place_window
+                0x20000758       0x60 /tmp/cc6umyhp.o
+ .text.capsule  0x200007b8       0x44 /tmp/cc6umyhp.o
+ .text.project  0x200007fc       0x5c /tmp/cc6umyhp.o
+ .text.swap     0x20000858       0x14 /tmp/cc6umyhp.o
+ .text.view     0x2000086c       0x48 /tmp/cc6umyhp.o
+ .text.edge     0x200008b4       0x4c /tmp/cc6umyhp.o
+ .text.stop_listen
+                0x20000900       0x30 /tmp/cc6umyhp.o
+ .text.plot     0x20000930       0x24 /tmp/cc6umyhp.o
+ .text.line     0x20000954       0xae /tmp/cc6umyhp.o
+ *fill*         0x20000a02        0x2 
+ .text.frame_sides
+                0x20000a04       0x9c /tmp/cc6umyhp.o
+ .text.memset   0x20000aa0       0x10 /tmp/cc6umyhp.o
+                0x20000aa0                memset
+ .text.restart  0x20000ab0       0x44 /tmp/cc6umyhp.o
+ .text.commit   0x20000af4       0x8c /tmp/cc6umyhp.o
+ .text.move_centre
+                0x20000b80       0x98 /tmp/cc6umyhp.o
+ .text.key_press
+                0x20000c18       0xf0 /tmp/cc6umyhp.o
+ .text.poll_keys
+                0x20000d08       0x68 /tmp/cc6umyhp.o
+ .text.__aeabi_idivmod
+                0x20000d70       0x14 /tmp/cc6umyhp.o
+                0x20000d70                __aeabi_idiv
+                0x20000d70                __aeabi_idivmod
+ .text.draw     0x20000d84      0x3a8 /tmp/cc6umyhp.o
+ *(.rodata .rodata.*)
+                0x2000112c                        . = ALIGN (0x4)
+ *(.data .data.*)
+                0x2000112c                        . = ALIGN (0x4)
+                0x2000112c                        __app_bss_start = .
+ *(.bss .bss.* COMMON)
+ .bss.g         0x2000112c       0x64 /tmp/cc6umyhp.o
+                0x20001190                        . = ALIGN (0x4)
+                0x20001190                        __app_bss_end = .
+                0x20001190                        __app_end = .
+                0x00000001                        ASSERT ((__app_end <= (APP_VMA + APP_LENGTH)), Spectrum3D overlay app overflows the 4 KiB overlay)
+
+.glue_7         0x20001190        0x0
+ .glue_7        0x20001190        0x0 linker stubs
+
+.glue_7t        0x20001190        0x0
+ .glue_7t       0x20001190        0x0 linker stubs
+
+.vfp11_veneer   0x20001190        0x0
+ .vfp11_veneer  0x20001190        0x0 linker stubs
+
+.v4_bx          0x20001190        0x0
+ .v4_bx         0x20001190        0x0 linker stubs
+
+.iplt           0x20001190        0x0
+ .iplt          0x20001190        0x0 /tmp/cc6umyhp.o
+
+.igot.plt       0x20001190        0x0
+ .igot.plt      0x20001190        0x0 /tmp/cc6umyhp.o
+
+.rel.dyn        0x20001190        0x0
+ .rel.iplt      0x20001190        0x0 /tmp/cc6umyhp.o
+
+/DISCARD/
+ *(.ARM.exidx*)
+ *(.ARM.extab*)
+ *(.eh_frame*)
+ *(.comment)
+ *(.note.*)
+OUTPUT(spectrum3d.elf elf32-littlearm)
+LOAD linker stubs
+
+.ARM.attributes
+                0x00000000       0x2c
+ .ARM.attributes
+                0x00000000       0x2c /tmp/cc6umyhp.o
