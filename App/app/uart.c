@@ -8,11 +8,11 @@
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
- *     Unless required by applicable law or agreed to in writing, software
- *     distributed under the License is distributed on an "AS IS" BASIS,
- *     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *     See the License for the specific language governing permissions and
- *     limitations under the License.
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 #include <string.h>
@@ -36,6 +36,7 @@
 #include "driver/backlight.h"
 #include "driver/bk4819.h"
 #include "driver/crc.h"
+// #include "driver/dcs.h" //for DTrac
 #include "driver/eeprom.h"
 #include "driver/gpio.h"
 
@@ -96,11 +97,14 @@ typedef struct
 
 #if defined(ENABLE_DTRAC)
 
-// for DTrac app CTCSS_CODE
+// for DTrac app CTCSS/DCS
 typedef struct
 {
     Header_t Header;
-    uint8_t CTCSS_CODE;
+    uint32_t CodeValue; // little-endian:
+                        // 99    = off
+                        // 0..49 = CTCSS index
+                        // else  = DCS Golay code word
 } CMD_9999_t;
 
 // for DTrac app downFreq
@@ -633,24 +637,78 @@ static void CMD_051D(uint32_t Port, const uint8_t *pBuffer)
 
 #if defined(ENABLE_DTRAC)
 
-// for DTrac app CTCSS_CODE
+// Reverse-lookup a DCS Golay code word to its option index and direction.
+// Returns 0xFF if the code word does not match any known DCS option.
+static uint8_t DCS_GetOptionFromGolay(uint32_t code, DCS_CodeType_t *pCodeType)
+{
+    for (uint8_t i = 0; i < DCS_OPTION_COUNT; i++)
+    {
+        if (DCS_GetGolayCodeWord(CODE_TYPE_DIGITAL, i) == code)
+        {
+            *pCodeType = CODE_TYPE_DIGITAL;
+            return i;
+        }
+
+        if (DCS_GetGolayCodeWord(CODE_TYPE_REVERSE_DIGITAL, i) == code)
+        {
+            *pCodeType = CODE_TYPE_REVERSE_DIGITAL;
+            return i;
+        }
+    }
+
+    return 0xFF;
+}
+
+// for DTrac app CTCSS/DCS
 static void CMD_9999(const uint8_t *pBuffer)
 {
     const CMD_9999_t *pCmd = (const CMD_9999_t *)pBuffer;
-    uint8_t ctcssCode = pCmd->CTCSS_CODE;
-    if (gRxVfo->pTX->Code != ctcssCode)
+    uint32_t codeValue = pCmd->CodeValue;
+
+    // 关闭亚音：APP 发送 99
+    if (codeValue == 99)
     {
-        if (ctcssCode < 99)
+        if (gRxVfo->pTX->CodeType != CODE_TYPE_OFF ||
+            gRxVfo->pTX->Code != 99)
+        {
+            gRxVfo->pTX->CodeType = CODE_TYPE_OFF;
+            gRxVfo->pTX->Code = 99;
+            BK4819_ExitSubAu();
+        }
+        return;
+    }
+
+    // CTCSS：APP 发送的是 CTCSS_Options 的索引 0..49
+    if (codeValue < ARRAY_SIZE(CTCSS_Options))
+    {
+        uint8_t ctcssCode = (uint8_t)codeValue;
+
+        if (gRxVfo->pTX->CodeType != CODE_TYPE_CONTINUOUS_TONE ||
+            gRxVfo->pTX->Code != ctcssCode)
         {
             gRxVfo->pTX->CodeType = CODE_TYPE_CONTINUOUS_TONE;
             gRxVfo->pTX->Code = ctcssCode;
+            BK4819_SetCTCSSFrequency(CTCSS_Options[ctcssCode]);
         }
-        else
+        return;
+    }
+
+    // DCS：APP 发送的是已经算好的 Golay 码字
+    {
+        DCS_CodeType_t codeType = CODE_TYPE_DIGITAL;
+        uint8_t dcsOption = DCS_GetOptionFromGolay(codeValue, &codeType);
+
+        if (dcsOption != 0xFF)
         {
-            gRxVfo->pTX->Code = 99; // 修复亚音偶发失步的故障
-            gRxVfo->pTX->CodeType = CODE_TYPE_OFF;
+            if (gRxVfo->pTX->CodeType != codeType ||
+                gRxVfo->pTX->Code != dcsOption)
+            {
+                gRxVfo->pTX->CodeType = codeType;
+                gRxVfo->pTX->Code = dcsOption;
+                BK4819_SetCDCSSCodeWord(
+                    DCS_GetGolayCodeWord(codeType, dcsOption));
+            }
         }
-        BK4819_SetCTCSSFrequency(CTCSS_Options[ctcssCode]);
     }
 }
 
@@ -1154,7 +1212,7 @@ void UART_HandleCommand(uint32_t Port)
     {
 #if defined(ENABLE_DTRAC)
     case 0x9999:
-        CMD_9999(pUART_Command->Buffer); // for DTrac app TX CTCSS
+        CMD_9999(pUART_Command->Buffer); // for DTrac app TX CTCSS/DCS
         break;
 
     case 0x8888:
