@@ -285,6 +285,7 @@ void UI_DisplayWelcome(void)
             strcpy(WelcomeString0, "VOLTAGE");
             strcpy(WelcomeString1, WelcomeString2);
         }
+        #ifdef ENABLE_FEAT_F4HWN
         else if (gEeprom.POWER_ON_DISPLAY_MODE == POWER_ON_DISPLAY_MODE_ALL)
         {
             if (strlen(WelcomeString0) == 0 && strlen(WelcomeString1) == 0)
@@ -301,6 +302,7 @@ void UI_DisplayWelcome(void)
                 strcpy(WelcomeString1, WelcomeString2);
             }
         }
+        #endif
         else if (gEeprom.POWER_ON_DISPLAY_MODE == POWER_ON_DISPLAY_MODE_MESSAGE)
         {
             if (strlen(WelcomeString0) == 0)
