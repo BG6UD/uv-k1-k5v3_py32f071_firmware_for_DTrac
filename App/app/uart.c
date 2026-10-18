@@ -8,11 +8,11 @@
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ *     Unless required by applicable law or agreed to in writing, software
+ *     distributed under the License is distributed on an "AS IS" BASIS,
+ *     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *     See the License for the specific language governing permissions and
+ *     limitations under the License.
  */
 
 #include <string.h>
@@ -36,7 +36,6 @@
 #include "driver/backlight.h"
 #include "driver/bk4819.h"
 #include "driver/crc.h"
-// #include "driver/dcs.h" //for DTrac
 #include "driver/eeprom.h"
 #include "driver/gpio.h"
 
@@ -97,7 +96,7 @@ typedef struct
 
 #if defined(ENABLE_DTRAC)
 
-// for DTrac app CTCSS/DCS
+// for DTrac app RX CTCSS/DCS
 typedef struct
 {
     Header_t Header;
@@ -107,33 +106,43 @@ typedef struct
                         // else  = DCS Golay code word
 } CMD_9999_t;
 
-// for DTrac app downFreq
+// for DTrac app TX CTCSS/DCS
+typedef struct
+{
+    Header_t Header;
+    uint32_t CodeValue; // little-endian:
+                        // 99    = off
+                        // 0..49 = CTCSS index
+                        // else  = DCS Golay code word
+} CMD_9998_t;
+
+// for DTrac app RX Freq
 typedef struct
 {
     Header_t Header;
     uint32_t DownFrequency;
-} CMD_8888_t;
+} CMD_9997_t;
 
-// for DTrac app upFreq
+// for DTrac app TX Freq
 typedef struct
 {
     Header_t Header;
     uint32_t UpFrequency;
-} CMD_7777_t;
+} CMD_9996_t;
 
 // for DTrac app mode
 typedef struct
 {
     Header_t Header;
     char Mode;
-} CMD_6666_t;
+} CMD_9995_t;
 
 // for DTrac app MonitorStatus
 typedef struct
 {
     Header_t Header;
     char MonitorStatus;
-} CMD_5555_t;
+} CMD_9993_t;
 
 #endif
 
@@ -637,6 +646,7 @@ static void CMD_051D(uint32_t Port, const uint8_t *pBuffer)
 
 #if defined(ENABLE_DTRAC)
 
+// for DTrac app
 // Reverse-lookup a DCS Golay code word to its option index and direction.
 // Returns 0xFF if the code word does not match any known DCS option.
 static uint8_t DCS_GetOptionFromGolay(uint32_t code, DCS_CodeType_t *pCodeType)
@@ -659,10 +669,83 @@ static uint8_t DCS_GetOptionFromGolay(uint32_t code, DCS_CodeType_t *pCodeType)
     return 0xFF;
 }
 
-// for DTrac app CTCSS/DCS
+// for DTrac app RX CTCSS/DCS
 static void CMD_9999(const uint8_t *pBuffer)
 {
     const CMD_9999_t *pCmd = (const CMD_9999_t *)pBuffer;
+    uint32_t codeValue = pCmd->CodeValue;
+    bool changed = false;
+
+    if (pCmd->Header.Size < sizeof(uint32_t))
+        return;
+
+    // 关闭接收亚音
+    if (codeValue == 99)
+    {
+        if (gRxVfo->pRX->CodeType != CODE_TYPE_OFF ||
+            gRxVfo->pRX->Code != 99)
+        {
+            gRxVfo->pRX->CodeType = CODE_TYPE_OFF;
+            gRxVfo->pRX->Code = 99;
+            changed = true;
+        }
+    }
+    // CTCSS：0..49
+    else if (codeValue < ARRAY_SIZE(CTCSS_Options))
+    {
+        uint8_t ctcssCode = (uint8_t)codeValue;
+
+        if (gRxVfo->pRX->CodeType != CODE_TYPE_CONTINUOUS_TONE ||
+            gRxVfo->pRX->Code != ctcssCode)
+        {
+            gRxVfo->pRX->CodeType = CODE_TYPE_CONTINUOUS_TONE;
+            gRxVfo->pRX->Code = ctcssCode;
+            changed = true;
+        }
+    }
+    // DCS Golay 码字
+    else
+    {
+        DCS_CodeType_t codeType = CODE_TYPE_DIGITAL;
+        uint8_t dcsOption = DCS_GetOptionFromGolay(codeValue, &codeType);
+
+        if (dcsOption != 0xFF)
+        {
+            if (gRxVfo->pRX->CodeType != codeType ||
+                gRxVfo->pRX->Code != dcsOption)
+            {
+                gRxVfo->pRX->CodeType = codeType;
+                gRxVfo->pRX->Code = dcsOption;
+                changed = true;
+            }
+        }
+    }
+
+    if (changed)
+    {
+        /*
+         * 不要调用 BK4819_ExitSubAu()。
+         * 该函数可能同时关掉 TX 亚音，导致 0x9999 设置的发射亚音失效。
+         *
+         * 让固件根据 pRX 重新配置 BK4819 的接收亚音检测使能/参数。
+         * 如果当前正在 PTT，建议不要重配，等释放后由正常流程应用。
+         */
+        if (!gPttIsPressed)
+        {
+            RADIO_SetupRegisters(true);
+            // 如果当前处于 MONITOR，可能需要恢复：
+            // if (gMonitor) APP_StartListening(FUNCTION_MONITOR);
+            // else          APP_StartListening(FUNCTION_RECEIVE);
+        }
+
+        gUpdateDisplay = true;
+    }
+}
+
+// for DTrac app TX CTCSS/DCS
+static void CMD_9998(const uint8_t *pBuffer)
+{
+    const CMD_9998_t *pCmd = (const CMD_9998_t *)pBuffer;
     uint32_t codeValue = pCmd->CodeValue;
 
     // 关闭亚音：APP 发送 99
@@ -712,10 +795,10 @@ static void CMD_9999(const uint8_t *pBuffer)
     }
 }
 
-// for DTrac app downFreq
-static void CMD_8888(uint32_t Port, const uint8_t *pBuffer)
+// for DTrac app RX Freq
+static void CMD_9997(uint32_t Port, const uint8_t *pBuffer)
 {
-    const CMD_8888_t *pCmd = (const CMD_8888_t *)pBuffer;
+    const CMD_9997_t *pCmd = (const CMD_9997_t *)pBuffer;
     uint32_t downFrequency = pCmd->DownFrequency / 10;
 
     if (gRxVfo->pRX->Frequency != downFrequency)
@@ -758,10 +841,10 @@ static void CMD_8888(uint32_t Port, const uint8_t *pBuffer)
     }
 }
 
-// for DTrac app upFreq
-static void CMD_7777(const uint8_t *pBuffer)
+// for DTrac app TX Freq
+static void CMD_9996(const uint8_t *pBuffer)
 {
-    const CMD_7777_t *pCmd = (const CMD_7777_t *)pBuffer;
+    const CMD_9996_t *pCmd = (const CMD_9996_t *)pBuffer;
     uint32_t upFrequency = pCmd->UpFrequency / 10;
     if (gRxVfo->pTX->Frequency != upFrequency)
     {
@@ -787,9 +870,9 @@ static void CMD_7777(const uint8_t *pBuffer)
 }
 
 // for DTrac app mode
-static void CMD_6666(const uint8_t *pBuffer)
+static void CMD_9995(const uint8_t *pBuffer)
 {
-    const CMD_6666_t *pCmd = (const CMD_6666_t *)pBuffer;
+    const CMD_9995_t *pCmd = (const CMD_9995_t *)pBuffer;
     // char mode = pCmd->Mode;
     uint8_t mode;
     switch (pCmd->Mode)
@@ -826,9 +909,9 @@ static void CMD_6666(const uint8_t *pBuffer)
 
 // for DTrac app MONITOR
 char lastMonitorStatus = 'U';
-static void CMD_5555(const uint8_t *pBuffer)
+static void CMD_9993(const uint8_t *pBuffer)
 {
-    const CMD_5555_t *pCmd = (const CMD_5555_t *)pBuffer;
+    const CMD_9993_t *pCmd = (const CMD_9993_t *)pBuffer;
 
     if (lastMonitorStatus != pCmd->MonitorStatus)
     {
@@ -1215,20 +1298,24 @@ void UART_HandleCommand(uint32_t Port)
         CMD_9999(pUART_Command->Buffer); // for DTrac app TX CTCSS/DCS
         break;
 
-    case 0x8888:
-        CMD_8888(Port, pUART_Command->Buffer); // for DTrac app downFreq
+    case 0x9998:
+        CMD_9998(pUART_Command->Buffer); // for DTrac app RX CTCSS/DCS
         break;
 
-    case 0x7777:
-        CMD_7777(pUART_Command->Buffer); // for DTrac app upFreq
+    case 0x9997:
+        CMD_9997(Port, pUART_Command->Buffer); // for DTrac app RX Freq
         break;
 
-    case 0x6666:
-        CMD_6666(pUART_Command->Buffer); // for DTrac app mode
+    case 0x9996:
+        CMD_9996(pUART_Command->Buffer); // for DTrac app TX Freq
         break;
 
-    case 0x5555:
-        CMD_5555(pUART_Command->Buffer); // for DTrac app MONITOR
+    case 0x9995:
+        CMD_9995(pUART_Command->Buffer); // for DTrac app Mode
+        break;
+
+    case 0x9993:
+        CMD_9993(pUART_Command->Buffer); // for DTrac app MONITOR
         break;
 #endif
 #ifdef ENABLE_AIRCOPY_UART
@@ -1665,8 +1752,8 @@ void UART_HandleCommand(uint32_t Port)
         gSerialConfigCountDown_500ms = 12; // keep serial mode alive (6 s)
         uint8_t slot = pUART_Command->Data[0];
         uint8_t status = APP_ValidateSlot(slot, NULL);
-        if (status == APP_OK)
-            APP_NotifySlotChanged();
+        // Also when refused: an incompatible app is installed and listed all the same.
+        APP_NotifySlotChanged();
         struct __attribute__((packed))
         {
             Header_t Header;

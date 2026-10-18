@@ -102,7 +102,7 @@
                 "ENABLE_UART_RW_BK_REGS": false,
                 "ENABLE_SWD": false,
                 "VERSION_STRING_1": "v0.22",
-                "VERSION_STRING_2": "v6.1.0"
+                "VERSION_STRING_2": "v6.2.0"
             }
         },
         {
@@ -196,7 +196,7 @@
                 "ENABLE_FEAT_F4HWN_OVERLAY_BEAM": true,
                 "ENABLE_FEAT_F4HWN_OVERLAY_INFO": true,
                 "ENABLE_FEAT_F4HWN_EXT_FLASH_RW": true,
-                "EDITION_STRING": "for DTrac",
+                "EDITION_STRING": "for DTrac Labs",
                 "TARGET": "uv-k1-k5v3_py32f071_firmware_Labs_for_dtrac"
             }
         },

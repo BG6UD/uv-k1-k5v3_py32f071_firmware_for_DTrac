@@ -285,7 +285,6 @@ void UI_DisplayWelcome(void)
             strcpy(WelcomeString0, "VOLTAGE");
             strcpy(WelcomeString1, WelcomeString2);
         }
-        #ifdef ENABLE_FEAT_F4HWN
         else if (gEeprom.POWER_ON_DISPLAY_MODE == POWER_ON_DISPLAY_MODE_ALL)
         {
             if (strlen(WelcomeString0) == 0 && strlen(WelcomeString1) == 0)
@@ -302,7 +301,6 @@ void UI_DisplayWelcome(void)
                 strcpy(WelcomeString1, WelcomeString2);
             }
         }
-        #endif
         else if (gEeprom.POWER_ON_DISPLAY_MODE == POWER_ON_DISPLAY_MODE_MESSAGE)
         {
             if (strlen(WelcomeString0) == 0)
@@ -370,7 +368,7 @@ void UI_DisplayWelcome(void)
 
         sprintf(WelcomeString3, "%s Edition", Edition);
 #if defined(ENABLE_DTRAC)
-        UI_PrintStringSmallNormal("for DTrac v1.0.15", 0, 127, 6);
+        UI_PrintStringSmallNormal("for DTrac v1.0.17", 0, 127, 6);
 #else
         UI_PrintStringSmallNormal(WelcomeString3, 0, 127, 6);
 #endif
